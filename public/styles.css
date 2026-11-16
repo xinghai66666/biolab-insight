@@ -166,3 +166,55 @@ body{
   .nav-item{justify-content:center}.main{padding:0 16px 40px}.stat-grid{grid-template-columns:repeat(2,1fr)}
   .form-grid,.metric-grid,.report-grid,.cols{grid-template-columns:1fr}
 }
+
+/* ===== 实验知识库 ===== */
+.kb-toolbar{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+.kb-select-wrap{display:flex;flex-direction:column;gap:6px;min-width:320px;flex:1}
+.kb-label{font-size:12px;color:var(--muted);font-weight:600}
+.kb-select-wrap select{border:1px solid var(--line-strong);border-radius:8px;padding:9px 11px;font-size:14px;font-family:inherit;background:#fff;color:var(--text);font-weight:600}
+.kb-toolbar-actions{display:flex;gap:8px;flex-wrap:wrap}
+.kb-overview{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.kb-ov-item{background:var(--bg);border-radius:9px;padding:12px 14px}
+.kb-ov-item.full{grid-column:1/-1}
+.kb-ov-label{font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.3px;margin-bottom:4px}
+.kb-ov-text{font-size:13px;line-height:1.65}
+.kb-specs{width:100%;border-collapse:collapse;font-size:12px}
+.kb-specs th,.kb-specs td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.kb-specs th{color:var(--muted);font-weight:600;width:32%}
+.kb-specs .spec-val{font-weight:600;color:var(--primary)}
+.kb-step{position:relative;border:1px solid var(--line);border-radius:11px;padding:0;margin-bottom:14px;overflow:hidden}
+.kb-step-head{display:flex;align-items:center;gap:13px;padding:14px 16px;cursor:pointer;user-select:none}
+.kb-step-head:hover{background:var(--bg)}
+.kb-step-no{flex-shrink:0;width:30px;height:30px;border-radius:8px;background:var(--primary-soft);color:var(--primary);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center}
+.kb-step-titles{flex:1;min-width:0}
+.kb-step-phase{font-size:11px;color:var(--muted)}
+.kb-step-title{font-weight:600;font-size:14px;margin-top:1px}
+.kb-step-pitfall-count{flex-shrink:0;font-size:11px;font-weight:600;color:var(--red);background:var(--red-soft);border-radius:20px;padding:3px 10px}
+.kb-chevron{flex-shrink:0;color:var(--faint);font-size:12px;transition:transform .2s}
+.kb-step.open .kb-chevron{transform:rotate(180deg)}
+.kb-step-body{display:none;padding:0 16px 16px;border-top:1px solid var(--line)}
+.kb-step.open .kb-step-body{display:block}
+.kb-purpose{margin-top:14px;padding:11px 14px;background:var(--teal-soft);border-left:3px solid var(--teal);border-radius:6px}
+.kb-purpose-label{font-size:11px;font-weight:600;color:var(--teal);letter-spacing:.3px;margin-bottom:4px}
+.kb-purpose-text{font-size:13px;line-height:1.65}
+.kb-detail-toggle{display:inline-flex;align-items:center;gap:6px;margin-top:12px;border:0;background:none;color:var(--primary);cursor:pointer;font-size:12px;font-weight:600;padding:0;font-family:inherit}
+.kb-detail-body{display:none;margin-top:8px;padding:12px 14px;background:var(--bg);border-radius:8px;font-size:13px;line-height:1.75}
+.kb-detail-body.show{display:block}
+.kb-pitfalls{margin-top:14px}
+.kb-pitfalls-title{font-size:12px;font-weight:600;color:var(--red);margin-bottom:8px}
+.kb-pitfall{border:1px solid #f0d0d0;border-left:3px solid var(--red);border-radius:8px;padding:10px 13px;margin-bottom:8px;background:#fffafa}
+.kb-pitfall.medium{border-color:#f0dfb8;border-left-color:var(--amber);background:#fffdf6}
+.kb-pitfall.low{border-color:#dfe3e8;border-left-color:var(--muted);background:#fafbfc}
+.kb-pitfall-head{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.kb-pitfall-level{font-size:10px;font-weight:700;border-radius:4px;padding:1px 7px;color:#fff;background:var(--red)}
+.kb-pitfall.medium .kb-pitfall-level{background:var(--amber)}
+.kb-pitfall.low .kb-pitfall-level{background:var(--muted)}
+.kb-pitfall-title{font-weight:600;font-size:13px}
+.kb-pitfall-row{font-size:12px;line-height:1.6;margin-top:3px;color:var(--muted)}
+.kb-pitfall-row strong{color:var(--text);font-weight:600}
+.kb-pitfall.medium .kb-pitfall-row .fix{color:var(--amber)}
+.kb-pitfall .fix{font-weight:600;color:var(--red)}
+.kb-pitfalls.hidden{display:none}
+.kb-refs{margin-top:4px}
+.kb-refs li{font-size:12px;color:var(--muted);margin:4px 0}
+@media(max-width:900px){.kb-overview{grid-template-columns:1fr}.kb-toolbar-actions{width:100%}}

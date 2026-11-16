@@ -30,12 +30,14 @@ function switchView(view) {
     dashboard: ['工作台', '实验室实验数据的智能总结与问题定位'],
     new: ['新建实验分析', '录入实验数据，获取结构化总结与问题诊断'],
     records: ['实验记录', '全部历史实验与分析结果'],
+    protocol: ['实验知识库', '标准操作步骤 · 作用说明 · 易错点提示'],
     about: ['关于与说明', '系统能力、数据架构与使用说明']
   };
   $('#viewTitle').textContent = titles[view][0];
   $('#viewSub').textContent = titles[view][1];
   if (view === 'dashboard') loadDashboard();
   if (view === 'records') loadRecords();
+  if (view === 'protocol') loadProtocolList();
 }
 
 $$('.nav-item').forEach(b => b.addEventListener('click', () => switchView(b.dataset.view)));
@@ -250,6 +252,103 @@ $('#filterType').addEventListener('change', loadRecords);
 $('#seedBtn').addEventListener('click', async () => {
   try { const r = await api('/api/seed', { method: 'POST', body: {} }); toast(r.message || `已载入 ${r.total} 条演示数据`); loadDashboard(); }
   catch (e) { toast(e.message); }
+});
+
+/* ===== 实验知识库 ===== */
+let kbCurrent = null;
+let kbPitfallsHidden = false;
+
+async function loadProtocolList() {
+  try {
+    const { protocols } = await api('/api/protocols');
+    const sel = $('#kbProtocolSelect');
+    sel.innerHTML = protocols.map(p => `<option value="${p.id}">${esc(p.name)}（${p.stepCount} 步 · ${p.pitfallCount} 处易错点）</option>`).join('');
+    if (protocols.length) await renderProtocol(protocols[0].id);
+  } catch (e) { toast('知识库加载失败：' + e.message); }
+}
+
+async function renderProtocol(id) {
+  try {
+    const { protocol } = await api('/api/protocols/' + encodeURIComponent(id));
+    kbCurrent = protocol;
+    const ov = protocol.overview;
+    const ovRows = [
+      ['实验原理', ov.principle, true],
+      ['适用场景', ov.application, true],
+      ['起始材料', ov.input, false],
+      ['产物', ov.output, false],
+      ['预计耗时', ov.duration, false],
+      ['参考产量', ov.yield, false]
+    ].map(([label, text, full]) => `<div class="kb-ov-item${full ? ' full' : ''}"><div class="kb-ov-label">${esc(label)}</div><div class="kb-ov-text">${esc(text)}</div></div>`).join('');
+
+    const specs = `<table class="kb-specs"><thead><tr><th>质控指标</th><th>参考范围</th><th>说明</th></tr></thead><tbody>${protocol.keySpecs.map(s => `<tr><td>${esc(s.label)}</td><td class="spec-val">${esc(s.value)}</td><td>${esc(s.note)}</td></tr>`).join('')}</tbody></table>`;
+
+    const levelText = { critical: '高危', medium: '中', low: '低' };
+    const steps = protocol.steps.map(s => {
+      const pitfalls = s.pitfalls.map(p => `<div class="kb-pitfall ${p.level}"><div class="kb-pitfall-head"><span class="kb-pitfall-level">${levelText[p.level] || p.level}</span><span class="kb-pitfall-title">${esc(p.title)}</span></div><div class="kb-pitfall-row"><strong>后果：</strong>${esc(p.consequence)}</div><div class="kb-pitfall-row fix"><strong>规避：</strong>${esc(p.fix)}</div></div>`).join('');
+      return `<div class="kb-step">
+        <div class="kb-step-head">
+          <span class="kb-step-no">${s.no}</span>
+          <div class="kb-step-titles"><div class="kb-step-phase">${esc(s.phase)}</div><div class="kb-step-title">${esc(s.title)}</div></div>
+          <span class="kb-step-pitfall-count">${s.pitfalls.length} 处易错</span>
+          <span class="kb-chevron">▼</span>
+        </div>
+        <div class="kb-step-body">
+          <div class="kb-purpose"><div class="kb-purpose-label">这一步的作用</div><div class="kb-purpose-text">${esc(s.purpose)}</div></div>
+          <button class="kb-detail-toggle" type="button">▸ 显示操作细节</button>
+          <div class="kb-detail-body">${esc(s.detail)}</div>
+          <div class="kb-pitfalls"><div class="kb-pitfalls-title">易出现失误之处</div>${pitfalls}</div>
+        </div>
+      </div>`;
+    }).join('');
+
+    const refs = `<ul class="kb-refs">${protocol.references.map(r => `<li>${esc(r)}</li>`).join('')}</ul>`;
+
+    $('#kbContent').innerHTML = `
+      <div class="panel">
+        <div class="panel-head"><h2>${esc(protocol.name)}</h2><span class="muted">${esc(protocol.category)}</span></div>
+        <div class="kb-overview">${ovRows}</div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>关键质控指标</h2></div>
+        ${specs}
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>标准操作步骤（${protocol.steps.length} 步）</h2><span class="head-hint">点击步骤展开 · 细节默认隐藏 · 易错点已标注</span></div>
+        ${steps}
+      </div>
+      <div class="panel"><div class="panel-head"><h2>参考依据</h2></div>${refs}
+        <p class="disclaimer">本知识库为通用参考流程，用于演示与培训；具体体积、离心力与时间以所用试剂盒说明书及实验室 SOP 为准。</p>
+      </div>`;
+
+    // 步骤头点击展开/收起
+    $$('#kbContent .kb-step-head').forEach(h => h.addEventListener('click', () => h.parentElement.classList.toggle('open')));
+    // 细节显示/隐藏
+    $$('#kbContent .kb-detail-toggle').forEach(b => b.addEventListener('click', e => {
+      e.stopPropagation();
+      const body = b.nextElementSibling;
+      const show = body.classList.toggle('show');
+      b.textContent = show ? '▾ 隐藏操作细节' : '▸ 显示操作细节';
+    }));
+    applyPitfallVisibility();
+  } catch (e) { toast('知识库渲染失败：' + e.message); }
+}
+
+function applyPitfallVisibility() {
+  $$('#kbContent .kb-pitfalls').forEach(el => el.classList.toggle('hidden', kbPitfallsHidden));
+}
+
+$('#kbProtocolSelect').addEventListener('change', e => renderProtocol(e.target.value));
+$('#kbExpandAll').addEventListener('click', () => $$('#kbContent .kb-step').forEach(s => s.classList.add('open')));
+$('#kbCollapseAll').addEventListener('click', () => {
+  $$('#kbContent .kb-step').forEach(s => s.classList.remove('open'));
+  $$('#kbContent .kb-detail-body').forEach(b => b.classList.remove('show'));
+  $$('#kbContent .kb-detail-toggle').forEach(b => b.textContent = '▸ 显示操作细节');
+});
+$('#kbTogglePitfalls').addEventListener('click', e => {
+  kbPitfallsHidden = !kbPitfallsHidden;
+  applyPitfallVisibility();
+  e.target.textContent = kbPitfallsHidden ? '显示易错点' : '隐藏易错点';
 });
 
 (async function init() {

@@ -10,6 +10,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const KB = require('./lib/knowledge-base');
+const PROTOCOL_KB = require('./lib/protocol-knowledge');
 const analyzer = require('./lib/analyzer');
 const store = require('./lib/store');
 
@@ -80,6 +81,17 @@ const server = http.createServer(async (req, res) => {
 
     if (p === '/api/types' && req.method === 'GET') {
       return send(res, 200, { types: KB.listExperimentTypes() });
+    }
+
+    if (p === '/api/protocols' && req.method === 'GET') {
+      return send(res, 200, { protocols: PROTOCOL_KB.listProtocols() });
+    }
+
+    if (p.startsWith('/api/protocols/') && req.method === 'GET') {
+      const id = decodeURIComponent(p.split('/').pop());
+      const protocol = PROTOCOL_KB.getProtocol(id);
+      if (!protocol) return send(res, 404, { error: '知识库条目不存在' });
+      return send(res, 200, { protocol });
     }
 
     if (p === '/api/experiments' && req.method === 'GET') {
