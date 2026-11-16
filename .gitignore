@@ -2,6 +2,7 @@ node_modules/
 package-lock.json
 capture-screenshots.js
 capture-kb.js
+capture-qa.js
 data/experiments.json
 data/*.tmp.*
 *.log
