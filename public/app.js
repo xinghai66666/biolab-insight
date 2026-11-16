@@ -28,7 +28,7 @@ function switchView(view) {
   $('#view-' + view).classList.add('active');
   const titles = {
     dashboard: ['实验数据中心', '实验室实验数据的智能总结与问题定位'],
-    new: ['新建实验分析', '录入实验数据，获取结构化总结与问题诊断'],
+    new: ['实验分析', '录入实验数据，获取结构化总结与问题诊断'],
     records: ['实验记录', '全部历史实验与分析结果'],
     protocol: ['实验知识库', '标准操作步骤 · 作用说明 · 易错点提示'],
     about: ['关于与说明', '系统能力、数据架构与使用说明']
