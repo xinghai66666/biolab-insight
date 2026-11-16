@@ -7,25 +7,26 @@
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<div class="app">
-  <aside class="sidebar">
-    <div class="brand">
+<div class="app" id="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand" id="sidebarToggle" role="button" tabindex="0" aria-label="收起或展开侧边栏" title="点击收起或展开侧边栏">
       <div class="brand-mark">B</div>
-      <div>
+      <div class="brand-text">
         <div class="brand-name">BioLab Insight</div>
         <div class="brand-sub">实验智能分析智能体</div>
       </div>
+      <span class="brand-caret" aria-hidden="true">«</span>
     </div>
     <nav class="nav">
-      <button class="nav-item active" data-view="dashboard"><span class="nav-ico">◧</span>实验数据中心</button>
-      <button class="nav-item" data-view="new"><span class="nav-ico">＋</span>实验分析</button>
-      <button class="nav-item" data-view="records"><span class="nav-ico">☰</span>实验记录</button>
-      <button class="nav-item" data-view="protocol"><span class="nav-ico">▤</span>实验知识库</button>
-      <button class="nav-item" data-view="qa"><span class="nav-ico">✦</span>实验问答</button>
-      <button class="nav-item" data-view="about"><span class="nav-ico">ⓘ</span>关于与说明</button>
+      <button class="nav-item active" data-view="dashboard" title="实验数据中心"><span class="nav-ico">◧</span><span class="nav-label">实验数据中心</span></button>
+      <button class="nav-item" data-view="new" title="实验分析"><span class="nav-ico">＋</span><span class="nav-label">实验分析</span></button>
+      <button class="nav-item" data-view="records" title="实验记录"><span class="nav-ico">☰</span><span class="nav-label">实验记录</span></button>
+      <button class="nav-item" data-view="protocol" title="实验知识库"><span class="nav-ico">▤</span><span class="nav-label">实验知识库</span></button>
+      <button class="nav-item" data-view="qa" title="实验问答"><span class="nav-ico">✦</span><span class="nav-label">实验问答</span></button>
+      <button class="nav-item" data-view="about" title="关于与说明"><span class="nav-ico">ⓘ</span><span class="nav-label">关于与说明</span></button>
     </nav>
     <div class="sidebar-foot">
-      <div class="engine-badge"><span class="dot"></span> 推理引擎就绪</div>
+      <div class="engine-badge"><span class="dot"></span><span class="foot-text">推理引擎就绪</span></div>
       <div class="storage-badge">数据存储：服务端文件持久化</div>
     </div>
   </aside>

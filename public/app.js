@@ -44,6 +44,33 @@ function switchView(view) {
 
 $$('.nav-item').forEach(b => b.addEventListener('click', () => switchView(b.dataset.view)));
 
+/* ===== 侧边栏：横向收起 / 展开 ===== */
+const appEl = $('#app');
+const sidebarToggle = $('#sidebarToggle');
+
+function setSidebarCollapsed(collapsed) {
+  appEl.classList.toggle('collapsed', !!collapsed);
+  sidebarToggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+  sidebarToggle.title = collapsed ? '点击展开侧边栏' : '点击收起侧边栏';
+}
+
+sidebarToggle.addEventListener('click', e => {
+  e.stopPropagation();
+  setSidebarCollapsed(!appEl.classList.contains('collapsed'));
+});
+sidebarToggle.addEventListener('keydown', e => {
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    setSidebarCollapsed(!appEl.classList.contains('collapsed'));
+  }
+});
+// 点击正文区域即收起侧边栏；展开通过左上角品牌区点击
+$('.main').addEventListener('click', () => {
+  if (!appEl.classList.contains('collapsed')) setSidebarCollapsed(true);
+});
+
+setSidebarCollapsed(false);
+
 const riskClass = k => ({ low: 'low', medium: 'medium', high: 'high', critical: 'critical' }[k] || 'low');
 
 async function loadTypes() {
