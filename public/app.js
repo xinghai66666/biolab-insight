@@ -258,6 +258,106 @@ $('#seedBtn').addEventListener('click', async () => {
 let kbCurrent = null;
 let kbPitfallsHidden = false;
 
+const reagentCard = $('#reagentCard');
+let reagentByAlias = new Map();
+let reagentById = new Map();
+let reagentPattern = null;
+let activeReagentEl = null;
+
+const escapeRegExp = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+function setReagentData(reagents) {
+  reagentByAlias = new Map();
+  reagentById = new Map();
+  const aliases = [];
+  (reagents || []).forEach(r => {
+    reagentById.set(r.id, r);
+    (r.aliases || [r.name]).forEach(a => {
+      if (!a || reagentByAlias.has(a)) return;
+      reagentByAlias.set(a, r);
+      aliases.push(a);
+    });
+  });
+  aliases.sort((a, b) => b.length - a.length);
+  reagentPattern = aliases.length
+    ? new RegExp('(' + aliases.map(escapeRegExp).join('|') + ')', 'g')
+    : null;
+}
+
+function linkReagents(text) {
+  const safe = esc(text);
+  if (!reagentPattern) return safe;
+  reagentPattern.lastIndex = 0;
+  return safe.replace(reagentPattern, m => {
+    const r = reagentByAlias.get(m);
+    if (!r) return m;
+    return `<span class="reagent" data-reagent="${esc(r.id)}" tabindex="0" role="button" aria-label="查看试剂知识卡：${esc(r.name)}">${m}</span>`;
+  });
+}
+
+function hideReagentCard() {
+  if (!reagentCard) return;
+  reagentCard.hidden = true;
+  reagentCard.innerHTML = '';
+  activeReagentEl = null;
+}
+
+function showReagentCard(anchor) {
+  if (!reagentCard) return;
+  const r = reagentById.get(anchor.dataset.reagent);
+  if (!r) return;
+  activeReagentEl = anchor;
+  reagentCard.innerHTML = `
+    <div class="reagent-card-head">
+      <div><div class="reagent-card-name">${esc(r.name)}</div><div class="reagent-card-cat">${esc(r.category)}</div></div>
+      <button class="reagent-card-close" type="button" data-close aria-label="关闭试剂知识卡">×</button>
+    </div>
+    <div class="reagent-card-row"><div class="reagent-card-label">作用</div><div>${esc(r['function'])}</div></div>
+    ${r.composition ? `<div class="reagent-card-row"><div class="reagent-card-label">成分</div><div>${esc(r.composition)}</div></div>` : ''}
+    ${r.notes ? `<div class="reagent-card-row"><div class="reagent-card-label">注意</div><div>${esc(r.notes)}</div></div>` : ''}
+    ${r.storage ? `<div class="reagent-card-row"><div class="reagent-card-label">储存</div><div>${esc(r.storage)}</div></div>` : ''}
+    <div class="reagent-card-foot">点击其他区域关闭 · 具体以试剂盒说明书为准</div>`;
+  reagentCard.hidden = false;
+  positionReagentCard(anchor);
+}
+
+function positionReagentCard(anchor) {
+  const rect = anchor.getBoundingClientRect();
+  const cw = reagentCard.offsetWidth || 320;
+  const ch = reagentCard.offsetHeight || 180;
+  let left = rect.left + rect.width / 2 - cw / 2;
+  let top = rect.bottom + 8;
+  if (top + ch > window.innerHeight - 12) top = rect.top - ch - 8;
+  left = Math.max(12, Math.min(left, window.innerWidth - cw - 12));
+  top = Math.max(12, top);
+  reagentCard.style.left = left + 'px';
+  reagentCard.style.top = top + 'px';
+}
+
+document.addEventListener('mouseover', e => {
+  const el = e.target.closest && e.target.closest('.reagent');
+  if (el) showReagentCard(el);
+});
+document.addEventListener('focusin', e => {
+  const el = e.target.closest && e.target.closest('.reagent');
+  if (el) showReagentCard(el);
+});
+document.addEventListener('click', e => {
+  if (e.target.closest && e.target.closest('[data-close]')) { hideReagentCard(); return; }
+  const el = e.target.closest && e.target.closest('.reagent');
+  if (el) { showReagentCard(el); return; }
+  if (!(e.target.closest && e.target.closest('#reagentCard'))) hideReagentCard();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') hideReagentCard();
+});
+window.addEventListener('scroll', () => {
+  if (!reagentCard || reagentCard.hidden || !activeReagentEl) return;
+  const rect = activeReagentEl.getBoundingClientRect();
+  if (rect.bottom < 0 || rect.top > window.innerHeight) { hideReagentCard(); return; }
+  positionReagentCard(activeReagentEl);
+}, true);
+
 async function loadProtocolList() {
   try {
     const { protocols } = await api('/api/protocols');
@@ -271,6 +371,8 @@ async function renderProtocol(id) {
   try {
     const { protocol } = await api('/api/protocols/' + encodeURIComponent(id));
     kbCurrent = protocol;
+    hideReagentCard();
+    setReagentData(protocol.reagents || []);
     const ov = protocol.overview;
     const ovRows = [
       ['实验原理', ov.principle, true],
@@ -286,32 +388,32 @@ async function renderProtocol(id) {
     const levelText = { critical: '高危', high: '高', medium: '中', low: '低' };
     const interpText = { ok: '正常', warn: '注意', bad: '异常', info: '说明' };
     const steps = protocol.steps.map(s => {
-      const pitfalls = s.pitfalls.map(p => `<div class="kb-pitfall ${p.level}"><div class="kb-pitfall-head"><span class="kb-pitfall-level">${levelText[p.level] || p.level}</span><span class="kb-pitfall-title">${esc(p.title)}</span></div><div class="kb-pitfall-row"><strong>后果：</strong>${esc(p.consequence)}</div><div class="kb-pitfall-row fix"><strong>规避：</strong>${esc(p.fix)}</div></div>`).join('');
-      const substeps = (s.substeps || []).map(x => `<li>${esc(x)}</li>`).join('');
-      const params = (s.params || []).map(p => `<div class="kb-param"><div class="kb-param-label">${esc(p.label)}</div><div class="kb-param-value">${esc(p.value)}</div></div>`).join('');
-      const checkpoints = (s.checkpoints || []).map(x => `<li>${esc(x)}</li>`).join('');
-      const interpRows = s.interpretation ? (s.interpretation.rows || []).map(r => `<tr class="kb-interp-${r.status}"><td class="kb-interp-metric">${esc(r.metric)}</td><td class="kb-interp-range">${esc(r.range)}</td><td><span class="kb-interp-badge">${interpText[r.status] || '说明'}</span>${esc(r.meaning)}</td><td>${esc(r.action)}</td></tr>`).join('') : '';
+      const pitfalls = s.pitfalls.map(p => `<div class="kb-pitfall ${p.level}"><div class="kb-pitfall-head"><span class="kb-pitfall-level">${levelText[p.level] || p.level}</span><span class="kb-pitfall-title">${linkReagents(p.title)}</span></div><div class="kb-pitfall-row"><strong>后果：</strong>${linkReagents(p.consequence)}</div><div class="kb-pitfall-row fix"><strong>规避：</strong>${linkReagents(p.fix)}</div></div>`).join('');
+      const substeps = (s.substeps || []).map(x => `<li>${linkReagents(x)}</li>`).join('');
+      const params = (s.params || []).map(p => `<div class="kb-param"><div class="kb-param-label">${linkReagents(p.label)}</div><div class="kb-param-value">${linkReagents(p.value)}</div></div>`).join('');
+      const checkpoints = (s.checkpoints || []).map(x => `<li>${linkReagents(x)}</li>`).join('');
+      const interpRows = s.interpretation ? (s.interpretation.rows || []).map(r => `<tr class="kb-interp-${r.status}"><td class="kb-interp-metric">${esc(r.metric)}</td><td class="kb-interp-range">${esc(r.range)}</td><td><span class="kb-interp-badge">${interpText[r.status] || '说明'}</span>${linkReagents(r.meaning)}</td><td>${linkReagents(r.action)}</td></tr>`).join('') : '';
       const interpretation = s.interpretation ? `<div class="kb-detail-section kb-interp-section">
             <div class="kb-detail-label">${esc(s.interpretation.title || '结果解读')}</div>
             <p class="kb-interp-intro">${esc(s.interpretation.intro || '')}</p>
             ${s.interpretation.order ? `<div class="kb-interp-order"><strong>判读顺序：</strong>${s.interpretation.order.map((x, i) => `<span>${i + 1}. ${esc(x)}</span>`).join('')}</div>` : ''}
             <div class="kb-interp-wrap"><table class="kb-interp"><thead><tr><th>指标</th><th>读数</th><th>解读</th><th>建议处理</th></tr></thead><tbody>${interpRows}</tbody></table></div>
-            ${s.interpretation.note ? `<p class="kb-interp-note">${esc(s.interpretation.note)}</p>` : ''}
+            ${s.interpretation.note ? `<p class="kb-interp-note">${linkReagents(s.interpretation.note)}</p>` : ''}
           </div>` : '';
       return `<div class="kb-step">
         <div class="kb-step-head">
           <span class="kb-step-no">${s.no}</span>
-          <div class="kb-step-titles"><div class="kb-step-phase">${esc(s.phase)}</div><div class="kb-step-title">${esc(s.title)}</div></div>
+          <div class="kb-step-titles"><div class="kb-step-phase">${esc(s.phase)}</div><div class="kb-step-title">${linkReagents(s.title)}</div></div>
           <span class="kb-step-pitfall-count">${s.pitfalls.length} 处易错</span>
           <span class="kb-chevron">▼</span>
         </div>
         <div class="kb-step-body">
-          <div class="kb-op-summary"><div class="kb-op-label">本步操作</div><div class="kb-op-text">${esc(s.summary || s.detail)}</div></div>
-          <div class="kb-purpose"><div class="kb-purpose-label">这一步的作用</div><div class="kb-purpose-text">${esc(s.purpose)}</div></div>
+          <div class="kb-op-summary"><div class="kb-op-label">本步操作</div><div class="kb-op-text">${linkReagents(s.summary || s.detail)}</div></div>
+          <div class="kb-purpose"><div class="kb-purpose-label">这一步的作用</div><div class="kb-purpose-text">${linkReagents(s.purpose)}</div></div>
           ${interpretation}
           <button class="kb-detail-toggle" type="button">▸ 显示详细步骤</button>
           <div class="kb-detail-body">
-            ${s.detail ? `<div class="kb-detail-intro">${esc(s.detail)}</div>` : ''}
+            ${s.detail ? `<div class="kb-detail-intro">${linkReagents(s.detail)}</div>` : ''}
             ${substeps ? `<div class="kb-detail-section"><div class="kb-detail-label">详细操作步骤</div><ol class="kb-substeps">${substeps}</ol></div>` : ''}
             ${params ? `<div class="kb-detail-section"><div class="kb-detail-label">关键参数</div><div class="kb-param-grid">${params}</div></div>` : ''}
             ${checkpoints ? `<div class="kb-detail-section"><div class="kb-detail-label">观察与判定</div><ul class="kb-checkpoints">${checkpoints}</ul></div>` : ''}
@@ -333,7 +435,7 @@ async function renderProtocol(id) {
         ${specs}
       </div>
       <div class="panel">
-        <div class="panel-head"><h2>标准操作步骤（${protocol.steps.length} 步）</h2><span class="head-hint">点击步骤展开 · 详细步骤默认隐藏 · 易错点已标注</span></div>
+        <div class="panel-head"><h2>标准操作步骤（${protocol.steps.length} 步）</h2><span class="head-hint">点击步骤展开 · 试剂名称可悬停查看知识卡 · 详细步骤默认隐藏 · 易错点已标注</span></div>
         ${steps}
       </div>
       <div class="panel"><div class="panel-head"><h2>参考依据</h2></div>${refs}
