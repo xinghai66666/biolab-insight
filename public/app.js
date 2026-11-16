@@ -160,23 +160,72 @@ function updateTypeHint(typeId) {
     : '按类别分组，选择类型后自动加载该实验的关键指标与诊断规则';
 }
 
+function metricFieldHtml(m) {
+  if (m.type === 'enum') {
+    const input = `<select name="m_${m.key}" data-default="${esc(m.expected || m.options[0])}" ${m.note ? 'title="' + esc(m.note) + '"' : ''}>${m.options.map(o => `<option value="${esc(o)}" ${o === m.expected ? 'selected' : ''}>${esc(o)}</option>`).join('')}</select>`;
+    const expected = m.expected ? `期望 ${m.expected}` : (m.note || '');
+    return `<div class="metric-field" data-core="${m.core === false ? 0 : 1}">
+      <div class="metric-label"><span>${esc(m.label)}</span></div>
+      <div class="metric-range">${esc(expected)}</div>${input}</div>`;
+  }
+  const hint = m.normal ? `正常 ${m.normal[0]}–${m.normal[1]}` : (m.note || '');
+  return `<div class="metric-field" data-core="${m.core === false ? 0 : 1}">
+    <div class="metric-label"><span>${esc(m.label)}${m.unit ? ' (' + esc(m.unit) + ')' : ''}</span></div>
+    <div class="metric-range">${esc(hint)} · 多重复用逗号分隔</div>
+    <input type="text" name="m_${m.key}" placeholder="${m.core === false ? '可留空' : '单值或 值,值,值'}"></div>`;
+}
+
 function renderMetricFields(typeId) {
   const t = state.types.find(x => x.id === typeId);
-  updateTypeHint(typeId);
   const box = $('#metricFields');
+  updateTypeHint(typeId);
   if (!t) { box.innerHTML = '<div class="empty">请先选择实验类型</div>'; return; }
-  box.innerHTML = t.metrics.map(m => {
-    let input;
-    if (m.type === 'enum') {
-      input = `<select name="m_${m.key}" ${m.note ? 'title="' + esc(m.note) + '"' : ''}>${m.options.map(o => `<option value="${esc(o)}" ${o === m.expected ? 'selected' : ''}>${esc(o)}</option>`).join('')}</select>`;
-    } else {
-      const hint = m.normal ? `正常 ${m.normal[0]}–${m.normal[1]}` : (m.note || '');
-      input = `<input type="text" name="m_${m.key}" placeholder="${m.replicates !== false ? '单值或 值,值,值' : '数值'}">`;
-      return `<div class="metric-field"><div class="metric-label"><span>${esc(m.label)}${m.unit ? ' (' + esc(m.unit) + ')' : ''}</span></div><div class="metric-range">${esc(hint)} · 多重复用逗号分隔</div>${input}</div>`;
-    }
-    const expected = m.expected ? `期望 ${esc(m.expected)}` : (m.note || '');
-    return `<div class="metric-field"><div class="metric-label"><span>${esc(m.label)}</span></div><div class="metric-range">${esc(expected)}</div>${input}</div>`;
-  }).join('');
+
+  const core = t.metrics.filter(m => m.core !== false);
+  const optional = t.metrics.filter(m => m.core === false);
+
+  const optionalHtml = optional.length ? `
+    <div class="metric-optional">
+      <button type="button" class="metric-optional-toggle" id="optToggle">
+        <span class="metric-optional-arrow">▸</span>其他可选指标（${optional.length} 项，按需填写）
+      </button>
+      <div class="metric-grid metric-optional-body" id="optBody">${optional.map(metricFieldHtml).join('')}</div>
+    </div>` : '';
+
+  box.innerHTML = `
+    <div class="metric-section-title">该实验的关键指标<span class="metric-section-hint">${core.length} 项 · 建议每次记录</span></div>
+    <div class="metric-grid">${core.map(metricFieldHtml).join('')}</div>
+    ${optionalHtml}`;
+
+  const toggle = $('#optToggle');
+  if (toggle) toggle.addEventListener('click', () => {
+    const body = $('#optBody');
+    const open = body.classList.toggle('show');
+    toggle.classList.toggle('open', open);
+    toggle.querySelector('.metric-optional-arrow').textContent = open ? '▾' : '▸';
+  });
+}
+
+function expandOptionalIfFilled() {
+  const body = $('#optBody');
+  const toggle = $('#optToggle');
+  if (!body || !toggle) return;
+  const filled = [...body.querySelectorAll('input')].some(el => String(el.value || '').trim())
+    || [...body.querySelectorAll('select')].some(el => el.value !== el.dataset.default);
+  if (filled) {
+    body.classList.add('show');
+    toggle.classList.add('open');
+    toggle.querySelector('.metric-optional-arrow').textContent = '▾';
+  }
+}
+
+/** 关键指标填写情况：用于提交前的轻校验 */
+function coreMetricStats(payload) {
+  const t = state.types.find(x => x.id === payload.type);
+  if (!t) return { total: 0, filled: 0, missing: [] };
+  const core = t.metrics.filter(m => m.core !== false);
+  const missing = core.filter(m => payload.metrics[m.key] === undefined).map(m => m.label);
+  return { total: core.length, filled: core.length - missing.length, missing };
 }
 
 $('#fType').addEventListener('change', e => renderMetricFields(e.target.value));
@@ -212,6 +261,8 @@ function collectForm() {
 $('#previewBtn').addEventListener('click', async () => {
   const payload = collectForm();
   if (!payload.type) return toast('请先选择实验类型');
+  const cs = coreMetricStats(payload);
+  if (cs.total && cs.filled === 0) return toast('请至少填写一项关键指标：' + cs.missing.slice(0, 3).join('、'));
   try {
     const { analysis } = await api('/api/analyze', { method: 'POST', body: payload });
     renderAnalysis(analysis, false);
@@ -224,6 +275,8 @@ $('#analysisForm').addEventListener('submit', async e => {
   const payload = collectForm();
   if (!payload.type) return toast('请先选择实验类型');
   if (!payload.title) return toast('请填写实验标题');
+  const cs = coreMetricStats(payload);
+  if (cs.total && cs.filled === 0) return toast('请至少填写一项关键指标：' + cs.missing.slice(0, 3).join('、'));
   try {
     const { analysis } = await api('/api/experiments', { method: 'POST', body: payload });
     renderAnalysis(analysis, true);
@@ -350,6 +403,7 @@ async function openRecord(id) {
     if (!el || record.metrics[m.key] === undefined) continue;
     el.value = m.type === 'enum' ? record.metrics[m.key] : (Array.isArray(record.metrics[m.key]) ? record.metrics[m.key].join(', ') : record.metrics[m.key]);
   }
+  expandOptionalIfFilled();
   if (record.analysis) renderAnalysis(record.analysis, true);
   $('#analysisResult').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
