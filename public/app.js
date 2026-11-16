@@ -170,7 +170,7 @@ function renderAnalysis(a, saved) {
       ${findingsHtml}
     </div>
     ${a.recommendations.length ? `<div class="panel"><div class="section-title" style="margin-top:0">优先排查建议</div>${a.recommendations.map((r, i) => `<div class="rec-item"><span class="rec-no">${i + 1}.</span><span>${esc(r.text)} <span class="muted">· 来自「${esc(r.from)}」</span></span></div>`).join('')}</div>` : ''}
-    <div class="muted" style="text-align:center;margin-top:8px">分析引擎：${esc(a.engine.name)} v${esc(a.engine.version)} · 命中规则 ${a.engine.ruleCount} 条 · 辅助决策工具，不替代 GMP 放行判定</div>
+    <div class="muted" style="text-align:center;margin-top:8px">分析引擎：${esc(a.engine.name)} v${esc(a.engine.version)} · 命中规则 ${a.engine.ruleCount} 条<br>可能性与健康度为规则驱动的启发式估计（非统计概率），阈值取通用参考值，需结合具体工艺校准；本工具为辅助决策，不替代 GMP 放行判定</div>
   `;
   box.style.display = 'block';
 }
