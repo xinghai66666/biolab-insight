@@ -168,7 +168,7 @@ function metricFieldHtml(m) {
       <div class="metric-label"><span>${esc(m.label)}</span></div>
       <div class="metric-range">${esc(expected)}</div>${input}</div>`;
   }
-  const hint = m.normal ? `正常 ${m.normal[0]}–${m.normal[1]}` : (m.note || '');
+  const hint = m.hideRange ? (m.note || '仅作记录，不设合格阈值') : (m.normal ? `正常 ${m.normal[0]}–${m.normal[1]}` : (m.note || ''));
   return `<div class="metric-field" data-core="${m.core === false ? 0 : 1}">
     <div class="metric-label"><span>${esc(m.label)}${m.unit ? ' (' + esc(m.unit) + ')' : ''}</span></div>
     <div class="metric-range">${esc(hint)} · 多重复用逗号分隔</div>
