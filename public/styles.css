@@ -62,7 +62,19 @@ body{
 .app.collapsed .sidebar{width:66px}
 .app.collapsed .brand{flex-direction:column;gap:5px;padding:14px 0 10px}
 .app.collapsed .brand-text{display:none}
-.app.collapsed .brand-caret{margin-left:0;transform:rotate(180deg);font-size:calc(12px * var(--fs));line-height:1}
+.app.collapsed .brand-caret{display:none}
+/* 折叠态展开按钮：侧边栏收窄后仍保留一个显式入口 */
+.sidebar-expand{display:none}
+.app.collapsed .sidebar-expand{
+  display:flex;align-items:center;justify-content:center;
+  width:36px;height:36px;margin:2px auto 8px;flex-shrink:0;
+  border:1px solid var(--line);border-radius:10px;background:var(--surface);
+  color:var(--muted);font-size:calc(16px * var(--fs));line-height:1;cursor:pointer;
+  font-family:inherit;transition:.15s;
+}
+.app.collapsed .sidebar-expand:hover{color:var(--primary);border-color:var(--primary);background:var(--primary-soft)}
+.app.collapsed .sidebar{cursor:pointer}
+.app.collapsed .nav-item{cursor:pointer}
 .app.collapsed .nav{padding:10px 9px;gap:6px}
 .app.collapsed .nav-item{justify-content:center;padding:11px 0;gap:0}
 .app.collapsed .nav-label{display:none}
