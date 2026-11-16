@@ -33,7 +33,7 @@ function switchView(view) {
     protocol: ['实验知识库', '标准操作步骤 · 作用说明 · 易错点提示'],
     qa: ['实验问答', '问实验细节、参数与疑惑，回答均标注知识来源'],
     settings: ['设置', '外观与阅读偏好：字号大小、背景颜色与夜间模式'],
-    about: ['关于与说明', '系统能力、数据架构与使用说明']
+    about: ['说明', '系统能力、数据架构与使用说明']
   };
   $('#viewTitle').textContent = titles[view][0];
   $('#viewSub').textContent = titles[view][1];
