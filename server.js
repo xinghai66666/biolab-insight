@@ -11,6 +11,7 @@ const fs = require('fs');
 const path = require('path');
 const KB = require('./lib/knowledge-base');
 const PROTOCOL_KB = require('./lib/protocol-knowledge');
+const QA = require('./lib/qa-engine');
 const analyzer = require('./lib/analyzer');
 const store = require('./lib/store');
 
@@ -92,6 +93,18 @@ const server = http.createServer(async (req, res) => {
       const protocol = PROTOCOL_KB.getProtocol(id);
       if (!protocol) return send(res, 404, { error: '知识库条目不存在' });
       return send(res, 200, { protocol });
+    }
+
+    if (p === '/api/qa/suggestions' && req.method === 'GET') {
+      return send(res, 200, QA.suggestions());
+    }
+
+    if (p === '/api/qa' && req.method === 'POST') {
+      const body = await readBody(req);
+      const question = String(body.question || '').trim();
+      if (!question) return send(res, 400, { error: '问题不能为空' });
+      if (question.length > 200) return send(res, 400, { error: '问题过长（上限 200 字）' });
+      return send(res, 200, QA.ask(question, { context: body.context || {} }));
     }
 
     if (p === '/api/experiments' && req.method === 'GET') {

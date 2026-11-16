@@ -31,6 +31,7 @@ function switchView(view) {
     new: ['实验分析', '录入实验数据，获取结构化总结与问题诊断'],
     records: ['实验记录', '全部历史实验与分析结果'],
     protocol: ['实验知识库', '标准操作步骤 · 作用说明 · 易错点提示'],
+    qa: ['实验问答', '问实验细节、参数与疑惑，回答均标注知识来源'],
     about: ['关于与说明', '系统能力、数据架构与使用说明']
   };
   $('#viewTitle').textContent = titles[view][0];
@@ -38,6 +39,7 @@ function switchView(view) {
   if (view === 'dashboard') loadDashboard();
   if (view === 'records') loadRecords();
   if (view === 'protocol') loadProtocolList();
+  if (view === 'qa') initQa();
 }
 
 $$('.nav-item').forEach(b => b.addEventListener('click', () => switchView(b.dataset.view)));
@@ -488,6 +490,185 @@ $('#kbTogglePitfalls').addEventListener('click', e => {
   kbPitfallsHidden = !kbPitfallsHidden;
   applyPitfallVisibility();
   e.target.textContent = kbPitfallsHidden ? '显示易错点' : '隐藏易错点';
+});
+
+/* ===== 实验问答 ===== */
+const qaState = { messages: [], context: null, busy: false, inited: false, quick: [] };
+
+const QA_CONF = { high: '高匹配', medium: '中等匹配', low: '低匹配' };
+
+function qaWelcome() {
+  return {
+    role: 'bot',
+    welcome: true,
+    data: {
+      headline: '我是实验问答助手',
+      intentLabel: '使用说明',
+      confidence: 'high',
+      blocks: [
+        { type: 'para', title: '可以问什么', text: '实验原理与每一步的作用、关键参数与操作细节、判定与质控范围、常见失误与排查方向，以及试剂的作用、成分与储存。' },
+        { type: 'list', title: '几种问法', items: [
+          '无内毒素质粒小提 A260/A280 偏低说明什么？',
+          '细胞传代时胰酶消化多久合适？',
+          'Ni-NTA 纯化收率低怎么排查？',
+          'P2 溶液的作用是什么？'
+        ] },
+        { type: 'note', text: '回答全部来自本机实验知识库的检索结果，并给出可点击的来源定位；知识库没有覆盖的内容会直接说明，不做猜测。' }
+      ],
+      sources: [],
+      followups: []
+    }
+  };
+}
+
+async function initQa() {
+  if (!qaState.inited) {
+    qaState.inited = true;
+    qaState.messages = [qaWelcome()];
+    renderQaThread();
+  }
+  if (qaState.quick.length) return;
+  try {
+    const data = await api('/api/qa/suggestions');
+    qaState.quick = data.quick || [];
+    const c = data.coverage || {};
+    const badge = $('#qaCoverage');
+    if (badge && c.protocols) badge.textContent = `可检索 ${c.protocols} 个实验 · ${c.steps} 个步骤 · ${c.reagents} 种试剂`;
+    renderQaQuick();
+  } catch (e) {
+    const badge = $('#qaCoverage');
+    if (badge) badge.textContent = '知识范围加载失败';
+  }
+}
+
+function renderQaQuick() {
+  const box = $('#qaQuick');
+  if (!box) return;
+  if (!qaState.quick.length) { box.innerHTML = '<span class="qa-quick-empty">暂无推荐问题</span>'; return; }
+  box.innerHTML = qaState.quick.map(q => `<button class="qa-chip" type="button" data-ask="${esc(q)}">${esc(q)}</button>`).join('');
+}
+
+function qaBlockHtml(b) {
+  if (!b) return '';
+  if (b.type === 'lead') return `<div class="qa-headline">${esc(b.text)}</div>${b.sub ? `<div class="qa-lead-sub">${esc(b.sub)}</div>` : ''}`;
+  if (b.type === 'para') return `<div class="qa-block"><div class="qa-block-title">${esc(b.title)}</div><div class="qa-block-text">${esc(b.text)}</div></div>`;
+  if (b.type === 'list') {
+    const items = (b.items || []).filter(Boolean);
+    if (!items.length) return '';
+    return `<div class="qa-block"><div class="qa-block-title">${esc(b.title)}</div><ul class="qa-list">${items.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>`;
+  }
+  if (b.type === 'note') return `<div class="qa-note">${esc(b.text)}</div>`;
+  return '';
+}
+
+function qaAnswerHtml(data) {
+  const sources = (data.sources || []).length
+    ? `<div class="qa-sources"><span class="qa-sources-label">来源</span>${data.sources.map(s => `<button class="qa-source" type="button" data-protocol="${esc(s.protocolId || '')}" data-step="${s.stepNo == null ? '' : s.stepNo}">${esc(s.label)}</button>`).join('')}</div>`
+    : '';
+  const followups = (data.followups || []).length
+    ? `<div class="qa-followups">${data.followups.map(f => `<button class="qa-chip" type="button" data-ask="${esc(f)}">${esc(f)}</button>`).join('')}</div>`
+    : '';
+  return `<div class="qa-answer">
+    <div class="qa-answer-head">
+      <span class="qa-intent">${esc(data.intentLabel || '综合说明')}</span>
+      <span class="qa-conf ${esc(data.confidence || 'medium')}">${esc(QA_CONF[data.confidence] || '中等匹配')}</span>
+    </div>
+    ${(data.blocks || []).map(qaBlockHtml).join('')}
+    ${sources}
+    ${followups}
+  </div>`;
+}
+
+function renderQaThread() {
+  const box = $('#qaThread');
+  if (!box) return;
+  box.innerHTML = qaState.messages.map(m => m.role === 'user'
+    ? `<div class="qa-msg user"><div class="qa-bubble">${esc(m.text)}</div></div>`
+    : `<div class="qa-msg bot">${qaAnswerHtml(m.data)}</div>`).join('');
+  if (qaState.busy) {
+    box.insertAdjacentHTML('beforeend', '<div class="qa-msg bot"><div class="qa-answer"><div class="qa-typing"><span></span><span></span><span></span> 正在检索知识库…</div></div></div>');
+  }
+  box.scrollTop = box.scrollHeight;
+}
+
+async function askQa(question) {
+  const q = String(question || '').trim();
+  if (!q || qaState.busy) return;
+  qaState.busy = true;
+  // 首次提问后收起欢迎卡片，让对话更聚焦
+  if (qaState.messages[0] && qaState.messages[0].welcome) qaState.messages.shift();
+  qaState.messages.push({ role: 'user', text: q });
+  renderQaThread();
+  const input = $('#qaInput');
+  if (input) { input.value = ''; input.style.height = 'auto'; }
+  try {
+    const data = await api('/api/qa', { method: 'POST', body: { question: q, context: qaState.context || {} } });
+    qaState.context = data.context || qaState.context;
+    qaState.messages.push({ role: 'bot', data });
+  } catch (e) {
+    qaState.messages.push({
+      role: 'bot',
+      data: {
+        headline: '请求失败',
+        intentLabel: '错误',
+        confidence: 'low',
+        blocks: [{ type: 'note', text: e.message }],
+        sources: [],
+        followups: []
+      }
+    });
+  } finally {
+    qaState.busy = false;
+    renderQaThread();
+  }
+}
+
+async function openProtocolStep(protocolId, stepNo) {
+  switchView('protocol');
+  try {
+    await loadProtocolList();
+    const sel = $('#kbProtocolSelect');
+    if (protocolId && sel.value !== protocolId) {
+      sel.value = protocolId;
+      await renderProtocol(protocolId);
+    }
+    if (stepNo) {
+      const step = document.querySelectorAll('#kbContent .kb-step')[Number(stepNo) - 1];
+      if (step) {
+        step.classList.add('open');
+        step.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        step.classList.add('flash');
+        setTimeout(() => step.classList.remove('flash'), 1800);
+      }
+    }
+  } catch (e) { toast('打开知识库失败：' + e.message); }
+}
+
+$('#qaThread').addEventListener('click', e => {
+  const chip = e.target.closest('[data-ask]');
+  if (chip) { askQa(chip.dataset.ask); return; }
+  const src = e.target.closest('.qa-source');
+  if (src) { openProtocolStep(src.dataset.protocol, src.dataset.step); }
+});
+$('#qaQuick').addEventListener('click', e => {
+  const chip = e.target.closest('[data-ask]');
+  if (chip) askQa(chip.dataset.ask);
+});
+$('#qaSend').addEventListener('click', () => askQa($('#qaInput').value));
+$('#qaInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+    e.preventDefault();
+    askQa(e.target.value);
+  }
+});
+$('#qaInput').addEventListener('input', e => {
+  e.target.style.height = 'auto';
+  e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+});
+$('#qaClear').addEventListener('click', () => {
+  qaState.messages = [qaWelcome()];
+  qaState.context = null;
+  renderQaThread();
 });
 
 (async function init() {

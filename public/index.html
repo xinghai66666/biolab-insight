@@ -21,6 +21,7 @@
       <button class="nav-item" data-view="new"><span class="nav-ico">＋</span>实验分析</button>
       <button class="nav-item" data-view="records"><span class="nav-ico">☰</span>实验记录</button>
       <button class="nav-item" data-view="protocol"><span class="nav-ico">▤</span>实验知识库</button>
+      <button class="nav-item" data-view="qa"><span class="nav-ico">✦</span>实验问答</button>
       <button class="nav-item" data-view="about"><span class="nav-ico">ⓘ</span>关于与说明</button>
     </nav>
     <div class="sidebar-foot">
@@ -138,6 +139,26 @@
       <div id="kbContent" class="kb-content"><div class="empty">正在加载知识库…</div></div>
     </section>
 
+    <!-- 实验问答 -->
+    <section class="view" id="view-qa">
+      <div class="qa-layout">
+        <div class="qa-toolbar">
+          <div class="qa-toolbar-left">
+            <span class="qa-badge" id="qaCoverage">正在加载知识范围…</span>
+            <span class="qa-toolbar-hint">回答来自本地知识库检索，可点击来源跳到对应步骤</span>
+          </div>
+          <button class="link-btn" id="qaClear">清空对话</button>
+        </div>
+        <div class="qa-thread" id="qaThread"></div>
+        <div class="qa-quick" id="qaQuick"></div>
+        <div class="qa-composer">
+          <textarea id="qaInput" rows="1" placeholder="问实验细节或疑惑，例如：P2 的作用是什么？A260/A230 偏低怎么办？" maxlength="200"></textarea>
+          <button class="btn primary" id="qaSend">发送</button>
+        </div>
+        <div class="qa-foot">仅检索本机实验知识库（SOP 步骤、试剂知识、诊断阈值），不联网、不调用外部大模型，不会编造知识库以外的参数。</div>
+      </div>
+    </section>
+
     <!-- 关于 -->
     <section class="view" id="view-about">
       <div class="panel about">
@@ -150,9 +171,10 @@
           <li>问题定位：证据 + 可能性评分 + 严重程度 + 原因假设 + 排查建议</li>
           <li>健康度评分与四级预警，历史批次对比</li>
           <li>实验知识库：13 个实验、100 个步骤，支持详细步骤折叠、试剂知识卡与 NanoDrop 读数解读</li>
+          <li>实验问答：自然语言提问实验细节，回答标注来源并可跳转到对应步骤核对</li>
         </ul>
         <h3>数据与架构</h3>
-        <p>后端采用 Node.js 原生模块构建 REST API，全部业务数据保存在服务端数据文件中（原子写入），浏览器端不保存任何业务数据。分析引擎为「领域知识库 + 证据加权推理」，规则可插拔扩展。</p>
+        <p>后端采用 Node.js 原生模块构建 REST API，全部业务数据保存在服务端数据文件中（原子写入），浏览器端不保存任何业务数据。分析引擎为「领域知识库 + 证据加权推理」，规则可插拔扩展；实验问答为本地检索式实现，不联网、不调用外部大模型，回答均标注知识来源。</p>
         <p class="disclaimer">本工具为研发与 QC 的辅助决策支持，不替代 GMP 放行判定、药典规定的检验结论或专业人员的判断。</p>
         <p class="muted">版本 1.0 · 首届 OPC 创新应用挑战赛 · AiCoding 硬核组 · AI 智能体方向</p>
       </div>
