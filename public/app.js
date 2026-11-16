@@ -284,11 +284,20 @@ async function renderProtocol(id) {
     const specs = `<table class="kb-specs"><thead><tr><th>质控指标</th><th>参考范围</th><th>说明</th></tr></thead><tbody>${protocol.keySpecs.map(s => `<tr><td>${esc(s.label)}</td><td class="spec-val">${esc(s.value)}</td><td>${esc(s.note)}</td></tr>`).join('')}</tbody></table>`;
 
     const levelText = { critical: '高危', high: '高', medium: '中', low: '低' };
+    const interpText = { ok: '正常', warn: '注意', bad: '异常', info: '说明' };
     const steps = protocol.steps.map(s => {
       const pitfalls = s.pitfalls.map(p => `<div class="kb-pitfall ${p.level}"><div class="kb-pitfall-head"><span class="kb-pitfall-level">${levelText[p.level] || p.level}</span><span class="kb-pitfall-title">${esc(p.title)}</span></div><div class="kb-pitfall-row"><strong>后果：</strong>${esc(p.consequence)}</div><div class="kb-pitfall-row fix"><strong>规避：</strong>${esc(p.fix)}</div></div>`).join('');
       const substeps = (s.substeps || []).map(x => `<li>${esc(x)}</li>`).join('');
       const params = (s.params || []).map(p => `<div class="kb-param"><div class="kb-param-label">${esc(p.label)}</div><div class="kb-param-value">${esc(p.value)}</div></div>`).join('');
       const checkpoints = (s.checkpoints || []).map(x => `<li>${esc(x)}</li>`).join('');
+      const interpRows = s.interpretation ? (s.interpretation.rows || []).map(r => `<tr class="kb-interp-${r.status}"><td class="kb-interp-metric">${esc(r.metric)}</td><td class="kb-interp-range">${esc(r.range)}</td><td><span class="kb-interp-badge">${interpText[r.status] || '说明'}</span>${esc(r.meaning)}</td><td>${esc(r.action)}</td></tr>`).join('') : '';
+      const interpretation = s.interpretation ? `<div class="kb-detail-section kb-interp-section">
+            <div class="kb-detail-label">${esc(s.interpretation.title || '结果解读')}</div>
+            <p class="kb-interp-intro">${esc(s.interpretation.intro || '')}</p>
+            ${s.interpretation.order ? `<div class="kb-interp-order"><strong>判读顺序：</strong>${s.interpretation.order.map((x, i) => `<span>${i + 1}. ${esc(x)}</span>`).join('')}</div>` : ''}
+            <div class="kb-interp-wrap"><table class="kb-interp"><thead><tr><th>指标</th><th>读数</th><th>解读</th><th>建议处理</th></tr></thead><tbody>${interpRows}</tbody></table></div>
+            ${s.interpretation.note ? `<p class="kb-interp-note">${esc(s.interpretation.note)}</p>` : ''}
+          </div>` : '';
       return `<div class="kb-step">
         <div class="kb-step-head">
           <span class="kb-step-no">${s.no}</span>
@@ -299,6 +308,7 @@ async function renderProtocol(id) {
         <div class="kb-step-body">
           <div class="kb-op-summary"><div class="kb-op-label">本步操作</div><div class="kb-op-text">${esc(s.summary || s.detail)}</div></div>
           <div class="kb-purpose"><div class="kb-purpose-label">这一步的作用</div><div class="kb-purpose-text">${esc(s.purpose)}</div></div>
+          ${interpretation}
           <button class="kb-detail-toggle" type="button">▸ 显示详细步骤</button>
           <div class="kb-detail-body">
             ${s.detail ? `<div class="kb-detail-intro">${esc(s.detail)}</div>` : ''}

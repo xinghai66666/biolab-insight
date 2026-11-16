@@ -211,6 +211,23 @@ body{
 .kb-param-value{font-size:12px;font-weight:600;margin-top:2px;line-height:1.5}
 .kb-checkpoints{margin:0;padding-left:18px}
 .kb-checkpoints li{font-size:12.5px;line-height:1.7;margin:3px 0;color:var(--muted)}
+.kb-interp-section{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line)}
+.kb-interp-intro{font-size:12.5px;line-height:1.7;color:var(--muted);margin:0 0 8px}
+.kb-interp-order{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;margin:0 0 10px;font-size:12px;color:var(--muted)}
+.kb-interp-order span{background:#fff;border:1px solid var(--line);border-radius:12px;padding:2px 9px;color:var(--text)}
+.kb-interp-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:#fff}
+.kb-interp{width:100%;min-width:720px;border-collapse:collapse;font-size:12px}
+.kb-interp th{text-align:left;background:#f7f9fc;color:var(--muted);font-weight:600;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+.kb-interp td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.6}
+.kb-interp tr:last-child td{border-bottom:0}
+.kb-interp-metric{font-weight:600;white-space:nowrap}
+.kb-interp-range{white-space:nowrap;font-variant-numeric:tabular-nums}
+.kb-interp-badge{display:inline-block;font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;margin-right:6px;vertical-align:1px}
+.kb-interp-ok .kb-interp-badge{background:var(--green-soft);color:var(--green)}
+.kb-interp-warn .kb-interp-badge{background:var(--amber-soft);color:var(--amber)}
+.kb-interp-bad .kb-interp-badge{background:var(--red-soft);color:var(--red)}
+.kb-interp-info .kb-interp-badge{background:var(--teal-soft);color:var(--teal)}
+.kb-interp-note{font-size:12px;line-height:1.7;color:var(--muted);margin:10px 0 0}
 .kb-detail-toggle{display:inline-flex;align-items:center;gap:6px;margin-top:12px;border:0;background:none;color:var(--primary);cursor:pointer;font-size:12px;font-weight:600;padding:0;font-family:inherit}
 .kb-detail-body{display:none;margin-top:8px;padding:12px 14px;background:var(--bg);border-radius:8px;font-size:13px;line-height:1.75}
 .kb-detail-body.show{display:block}
