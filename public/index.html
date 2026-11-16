@@ -26,11 +26,13 @@
       <span class="brand-caret" aria-hidden="true">«</span>
     </div>
     <nav class="nav">
-      <button class="nav-item active" data-view="dashboard" title="实验数据中心"><span class="nav-ico">◧</span><span class="nav-label">实验数据中心</span></button>
+      <div class="nav-group-title">分析工作区</div>
+      <button class="nav-item active" data-view="qa" title="实验问答"><span class="nav-ico">✦</span><span class="nav-label">实验问答</span></button>
+      <button class="nav-item" data-view="dashboard" title="实验数据中心"><span class="nav-ico">◧</span><span class="nav-label">实验数据中心</span></button>
       <button class="nav-item" data-view="new" title="实验分析"><span class="nav-ico">＋</span><span class="nav-label">实验分析</span></button>
       <button class="nav-item" data-view="records" title="实验记录"><span class="nav-ico">☰</span><span class="nav-label">实验记录</span></button>
+      <div class="nav-group-title">知识与支持</div>
       <button class="nav-item" data-view="protocol" title="实验知识库"><span class="nav-ico">▤</span><span class="nav-label">实验知识库</span></button>
-      <button class="nav-item" data-view="qa" title="实验问答"><span class="nav-ico">✦</span><span class="nav-label">实验问答</span></button>
       <button class="nav-item" data-view="about" title="说明"><span class="nav-ico">ⓘ</span><span class="nav-label">说明</span></button>
       <button class="nav-item" data-view="settings" title="设置"><span class="nav-ico">⚙</span><span class="nav-label">设置</span></button>
     </nav>
@@ -48,8 +50,8 @@
 
     <header class="topbar">
       <div>
-        <h1 id="viewTitle">实验数据中心</h1>
-        <p id="viewSub">实验室实验数据的智能总结与问题定位</p>
+        <h1 id="viewTitle">实验问答</h1>
+        <p id="viewSub">问实验细节、参数与疑惑，回答均标注知识来源</p>
       </div>
       <div class="topbar-actions">
         <button class="btn ghost" id="seedBtn">载入演示数据</button>
@@ -57,7 +59,7 @@
     </header>
 
     <!-- 实验数据中心 -->
-    <section class="view active" id="view-dashboard">
+    <section class="view" id="view-dashboard">
       <div class="stat-grid" id="statGrid">
         <div class="stat-card"><div class="stat-label">实验总数</div><div class="stat-value">—</div></div>
         <div class="stat-card"><div class="stat-label">严重预警</div><div class="stat-value">—</div></div>
@@ -151,8 +153,25 @@
     </section>
 
     <!-- 实验问答 -->
-    <section class="view" id="view-qa">
+    <section class="view active" id="view-qa">
       <div class="qa-layout">
+        <div class="qa-hero" id="qaHero">
+          <div class="qa-hero-main">
+            <div class="qa-hero-kicker">实验知识问答</div>
+            <h2 class="qa-hero-title">把实验知识库变成能问的同事</h2>
+            <p class="qa-hero-desc">问原理、问参数、问判定、问异常原因——每条回答都来自本地知识库，并标注可点击的步骤来源。</p>
+            <div class="qa-hero-actions">
+              <button class="btn primary" data-goto="new">开始一次实验分析</button>
+              <button class="btn ghost" data-goto="protocol">浏览实验知识库</button>
+              <button class="btn ghost" data-goto="dashboard">查看实验数据中心</button>
+            </div>
+          </div>
+          <div class="qa-hero-stats">
+            <div class="qa-hero-stat"><div class="n" id="qaStatProtocols">21</div><div class="t">个实验 SOP</div></div>
+            <div class="qa-hero-stat"><div class="n" id="qaStatSteps">155</div><div class="t">个操作步骤</div></div>
+            <div class="qa-hero-stat"><div class="n" id="qaStatReagents">74</div><div class="t">种试剂词条</div></div>
+          </div>
+        </div>
         <div class="qa-toolbar">
           <div class="qa-toolbar-left">
             <span class="qa-badge" id="qaCoverage">正在加载知识范围…</span>
@@ -166,7 +185,7 @@
           <textarea id="qaInput" rows="1" placeholder="问实验细节或疑惑，例如：P2 的作用是什么？A260/A230 偏低怎么办？" maxlength="200"></textarea>
           <button class="btn primary" id="qaSend">发送</button>
         </div>
-        <div class="qa-foot">仅检索本机实验知识库（SOP 步骤、试剂知识、诊断阈值），不联网、不调用外部大模型，不会编造知识库以外的参数。</div>
+        <div class="qa-foot">回答均来自本机实验知识库（SOP 步骤 · 试剂知识 · 诊断阈值），不联网、不调用外部大模型。</div>
       </div>
     </section>
 

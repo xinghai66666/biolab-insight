@@ -66,8 +66,9 @@ sidebarToggle.addEventListener('keydown', e => {
     setSidebarCollapsed(!appEl.classList.contains('collapsed'));
   }
 });
-// 点击正文区域即收起侧边栏；展开通过左上角品牌区点击
-$('.main').addEventListener('click', () => {
+// 点击正文空白区域收起侧边栏；点按钮、输入框、可交互卡片时不收起
+$('.main').addEventListener('click', e => {
+  if (e.target.closest('button, a, input, textarea, select, label, .kb-step, .qa-msg, .reagent-card')) return;
   if (!appEl.classList.contains('collapsed')) setSidebarCollapsed(true);
 });
 
@@ -666,15 +667,14 @@ function qaWelcome() {
       intentLabel: '使用说明',
       confidence: 'high',
       blocks: [
-        { type: 'lead', text: '我是实验问答助手', sub: '问实验细节、参数、判定与异常原因，回答都带来源' },
-        { type: 'para', title: '可以问什么', text: '实验原理与每一步的作用、关键参数与操作细节、判定与质控范围、常见失误与排查方向，以及试剂的作用、成分与储存。' },
-        { type: 'list', title: '几种问法', items: [
-          '无内毒素质粒小提 A260/A280 偏低说明什么？',
-          '细胞传代时胰酶消化多久合适？',
-          'Ni-NTA 纯化收率低怎么排查？',
-          'P2 溶液的作用是什么？'
+        { type: 'lead', text: '实验问答助手', sub: '问实验细节、参数、判定与异常原因，回答都带来源' },
+        { type: 'para', title: '怎么问', text: '可直接输入问题，或从下方推荐问题开始。涉及具体步骤时，回答会给出「实验名 · 第 N 步」的来源，点击即可跳到知识库核对。' },
+        { type: 'cards', items: [
+          { title: '问原理', desc: '这一步为什么这么做、不加会怎样', ask: '无内毒素质粒小提中 P2 裂解液的作用是什么？' },
+          { title: '问参数', desc: '加多少、孵育多久、范围是多少', ask: 'Ni-NTA 纯化洗脱咪唑用多少浓度？' },
+          { title: '问排查', desc: '指标偏低或异常，可能是什么原因', ask: 'SEC-HPLC 聚集体偏高怎么排查？' }
         ] },
-        { type: 'note', text: '回答全部来自本机实验知识库的检索结果，并给出可点击的来源定位；知识库没有覆盖的内容会直接说明，不做猜测。' }
+        { type: 'note', text: '仅检索本机实验知识库，不联网、不调用外部大模型；知识库没有覆盖的内容会直接说明，不做猜测。' }
       ],
       sources: [],
       followups: []
@@ -695,6 +695,10 @@ async function initQa() {
     const c = data.coverage || {};
     const badge = $('#qaCoverage');
     if (badge && c.protocols) badge.textContent = `可检索 ${c.protocols} 个实验 · ${c.steps} 个步骤 · ${c.reagents} 种试剂`;
+    const statP = $('#qaStatProtocols'), statS = $('#qaStatSteps'), statR = $('#qaStatReagents');
+    if (statP && c.protocols) statP.textContent = c.protocols;
+    if (statS && c.steps) statS.textContent = c.steps;
+    if (statR && c.reagents) statR.textContent = c.reagents;
     renderQaQuick();
   } catch (e) {
     const badge = $('#qaCoverage');
@@ -717,6 +721,11 @@ function qaBlockHtml(b) {
     const items = (b.items || []).filter(Boolean);
     if (!items.length) return '';
     return `<div class="qa-block"><div class="qa-block-title">${esc(b.title)}</div><ul class="qa-list">${items.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>`;
+  }
+  if (b.type === 'cards') {
+    const items = (b.items || []).filter(Boolean);
+    if (!items.length) return '';
+    return `<div class="qa-cards">${items.map(c => `<button class="qa-card" type="button" data-ask="${esc(c.ask || '')}"><div class="qa-card-t">${esc(c.title)}</div><div class="qa-card-d">${esc(c.desc)}</div></button>`).join('')}</div>`;
   }
   if (b.type === 'note') return `<div class="qa-note">${esc(b.text)}</div>`;
   return '';
@@ -750,6 +759,17 @@ function renderQaThread() {
     box.insertAdjacentHTML('beforeend', '<div class="qa-msg bot"><div class="qa-answer"><div class="qa-typing"><span></span><span></span><span></span> 正在检索知识库…</div></div></div>');
   }
   box.scrollTop = box.scrollHeight;
+  syncQaHero();
+}
+
+/** 首页欢迎区：对话开始后收起，清空对话后恢复 */
+function syncQaHero() {
+  const hero = $('#qaHero');
+  if (!hero) return;
+  const chatting = qaState.messages.some(m => m.role === 'user');
+  hero.classList.toggle('hidden', chatting);
+  const layout = document.querySelector('.qa-layout');
+  if (layout) layout.classList.toggle('chatting', chatting);
 }
 
 async function askQa(question) {
@@ -811,6 +831,10 @@ $('#qaThread').addEventListener('click', e => {
   const src = e.target.closest('.qa-source');
   if (src) { openProtocolStep(src.dataset.protocol, src.dataset.step); }
 });
+$('#qaHero').addEventListener('click', e => {
+  const btn = e.target.closest('[data-goto]');
+  if (btn) switchView(btn.dataset.goto);
+});
 $('#qaQuick').addEventListener('click', e => {
   const chip = e.target.closest('[data-ask]');
   if (chip) askQa(chip.dataset.ask);
@@ -836,6 +860,8 @@ $('#qaClear').addEventListener('click', () => {
   try {
     document.querySelector('[name="date"]').value = new Date().toISOString().slice(0, 10);
     await loadTypes();
-    await loadDashboard();
+    // 首页为实验问答；数据中心统计在后台预热，切换时无需等待
+    switchView('qa');
+    loadDashboard().catch(() => {});
   } catch (e) { toast('初始化失败：' + e.message); }
 })();
