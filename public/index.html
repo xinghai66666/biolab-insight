@@ -83,11 +83,12 @@
     <section class="view" id="view-new">
       <form id="analysisForm" class="form-layout">
         <div class="panel">
-          <div class="panel-head"><h2>① 实验基本信息</h2></div>
+          <div class="panel-head"><h2>① 实验基本信息</h2><span class="head-hint" id="typeCountHint"></span></div>
           <div class="form-grid">
             <label class="field full">实验类型
               <select id="fType" name="type" required><option value="">请选择实验类型</option></select>
             </label>
+            <div class="type-hint" id="typeHint">按类别分组，选择类型后自动加载该实验的关键指标与诊断规则</div>
             <label class="field full">实验标题
               <input type="text" name="title" placeholder="例如：CHO 种子细胞扩增 - 批次 C-2601" required>
             </label>
@@ -223,7 +224,7 @@
         <p>面向生物制药实验室的 AI 智能体原型：对实验数据进行结构化总结，并针对不同实验结果定位可能的问题所在，给出按可能性排序的排查建议。</p>
         <h3>核心能力</h3>
         <ul>
-          <li>覆盖细胞培养、蛋白纯化、qPCR、Western Blot、ELISA、无菌检测 6 类实验</li>
+          <li>覆盖 13 类实验、按 6 个类别分组：细胞培养/冻存复苏、蛋白纯化、SDS-PAGE、qPCR、Western Blot、ELISA、质粒制备、DNA 回收、转化、无菌检测、支原体 PCR、内毒素检查</li>
           <li>异常检测：指标越界、对照失效、重复孔 CV 过高、历史趋势漂移、组合异常</li>
           <li>问题定位：证据 + 可能性评分 + 严重程度 + 原因假设 + 排查建议</li>
           <li>健康度评分与四级预警，历史批次对比</li>

@@ -124,17 +124,45 @@ applyUi();
 
 const riskClass = k => ({ low: 'low', medium: 'medium', high: 'high', critical: 'critical' }[k] || 'low');
 
+function groupedTypeOptions(types) {
+  const groups = new Map();
+  types.forEach(t => {
+    const c = t.category || '其他';
+    if (!groups.has(c)) groups.set(c, []);
+    groups.get(c).push(t);
+  });
+  return [...groups.entries()].map(([cat, list]) =>
+    `<optgroup label="${esc(cat)}">${list.map(t => `<option value="${esc(t.id)}">${esc(t.name)}</option>`).join('')}</optgroup>`
+  ).join('');
+}
+
 async function loadTypes() {
   const data = await api('/api/types');
   state.types = data.types;
   const sel = $('#fType');
-  sel.innerHTML = '<option value="">请选择实验类型</option>' + state.types.map(t => `<option value="${t.id}">${esc(t.name)} · ${esc(t.category)}</option>`).join('');
+  sel.innerHTML = '<option value="">请选择实验类型</option>' + groupedTypeOptions(state.types);
   const fsel = $('#filterType');
-  fsel.innerHTML = '<option value="">全部类型</option>' + state.types.map(t => `<option value="${t.id}">${esc(t.name)}</option>`).join('');
+  fsel.innerHTML = '<option value="">全部类型</option>' + groupedTypeOptions(state.types);
+  const hint = $('#typeCountHint');
+  if (hint) {
+    const cats = new Set(state.types.map(t => t.category || '其他'));
+    hint.textContent = `共 ${state.types.length} 类实验 · ${cats.size} 个类别`;
+  }
+  updateTypeHint('');
+}
+
+function updateTypeHint(typeId) {
+  const el = $('#typeHint');
+  if (!el) return;
+  const t = state.types.find(x => x.id === typeId);
+  el.textContent = t
+    ? `${t.category} · ${t.description}`
+    : '按类别分组，选择类型后自动加载该实验的关键指标与诊断规则';
 }
 
 function renderMetricFields(typeId) {
   const t = state.types.find(x => x.id === typeId);
+  updateTypeHint(typeId);
   const box = $('#metricFields');
   if (!t) { box.innerHTML = '<div class="empty">请先选择实验类型</div>'; return; }
   box.innerHTML = t.metrics.map(m => {
