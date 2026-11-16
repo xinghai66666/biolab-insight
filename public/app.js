@@ -151,17 +151,51 @@ function groupedTypeOptions(types) {
   ).join('');
 }
 
+function categoryList() {
+  return [...new Set(state.types.map(t => t.category || '其他'))];
+}
+
+/** 第一级：实验类别 */
+function fillCategoryOptions(value = '') {
+  const sel = $('#fCategory');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">全部类别</option>' +
+    categoryList().map(c => `<option value="${esc(c)}">${esc(c)}（${state.types.filter(t => (t.category || '其他') === c).length}）</option>`).join('');
+  sel.value = value;
+}
+
+/** 第二级：实验类型（按类别过滤；未选类别时仍按类别分组展示） */
+function fillTypeOptions(category = '', keepValue = '') {
+  const sel = $('#fType');
+  if (!sel) return;
+  if (category) {
+    const list = state.types.filter(t => (t.category || '其他') === category);
+    sel.innerHTML = '<option value="">请选择实验类型</option>' +
+      list.map(t => `<option value="${esc(t.id)}">${esc(t.name)}</option>`).join('');
+  } else {
+    sel.innerHTML = '<option value="">请选择实验类型</option>' + groupedTypeOptions(state.types);
+  }
+  sel.value = keepValue && sel.querySelector(`option[value="${keepValue}"]`) ? keepValue : '';
+}
+
+/** 依据类型反选类别（用于打开历史记录） */
+function setTypeSelection(typeId) {
+  const t = state.types.find(x => x.id === typeId);
+  const cat = t ? (t.category || '其他') : '';
+  fillCategoryOptions(cat);
+  fillTypeOptions(cat, typeId);
+}
+
 async function loadTypes() {
   const data = await api('/api/types');
   state.types = data.types;
-  const sel = $('#fType');
-  sel.innerHTML = '<option value="">请选择实验类型</option>' + groupedTypeOptions(state.types);
+  fillCategoryOptions('');
+  fillTypeOptions('');
   const fsel = $('#filterType');
   fsel.innerHTML = '<option value="">全部类型</option>' + groupedTypeOptions(state.types);
   const hint = $('#typeCountHint');
   if (hint) {
-    const cats = new Set(state.types.map(t => t.category || '其他'));
-    hint.textContent = `共 ${state.types.length} 类实验 · ${cats.size} 个类别`;
+    hint.textContent = `共 ${state.types.length} 类实验 · ${categoryList().length} 个类别`;
   }
   updateTypeHint('');
 }
@@ -243,7 +277,22 @@ function coreMetricStats(payload) {
   return { total: core.length, filled: core.length - missing.length, missing };
 }
 
-$('#fType').addEventListener('change', e => renderMetricFields(e.target.value));
+$('#fCategory').addEventListener('change', e => {
+  fillTypeOptions(e.target.value);
+  renderMetricFields('');
+  updateTypeHint('');
+});
+$('#fType').addEventListener('change', e => {
+  const v = e.target.value;
+  const t = state.types.find(x => x.id === v);
+  const catSel = $('#fCategory');
+  // 在「全部类别」下直接选类型时，自动把类别同步过去，避免两级显示不一致
+  if (t && catSel && catSel.value !== (t.category || '其他')) {
+    fillCategoryOptions(t.category || '其他');
+    fillTypeOptions(t.category || '其他', v);
+  }
+  renderMetricFields(v);
+});
 
 function collectForm() {
   const fd = new FormData($('#analysisForm'));
@@ -406,7 +455,7 @@ async function openRecord(id) {
   const { record } = await api('/api/experiments/' + id);
   switchView('new');
   $('#analysisForm').reset();
-  $('#fType').value = record.type;
+  setTypeSelection(record.type);
   renderMetricFields(record.type);
   const fd = $('#analysisForm');
   for (const k of ['title', 'batch', 'date', 'operator', 'objective', 'observations']) {

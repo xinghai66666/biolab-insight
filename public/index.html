@@ -81,10 +81,13 @@
         <div class="panel">
           <div class="panel-head"><h2>① 实验基本信息</h2><span class="head-hint" id="typeCountHint"></span></div>
           <div class="form-grid">
-            <label class="field full">实验类型
+            <label class="field">实验类别
+              <select id="fCategory"><option value="">全部类别</option></select>
+            </label>
+            <label class="field">实验类型
               <select id="fType" name="type" required><option value="">请选择实验类型</option></select>
             </label>
-            <div class="type-hint" id="typeHint">按类别分组，选择类型后自动加载该实验的关键指标与诊断规则</div>
+            <div class="type-hint" id="typeHint">先选实验类别缩小范围，再选具体实验类型；选定后自动加载该实验的关键指标与诊断规则</div>
             <label class="field full">实验标题
               <input type="text" name="title" placeholder="例如：CHO 种子细胞扩增 - 批次 C-2601" required>
             </label>
