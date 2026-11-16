@@ -27,6 +27,7 @@ node server.js
 | 健康度与预警 | 0–100 健康度评分，低 / 中 / 高 / 严重四级预警 |
 | 历史对比 | 服务端保存全部记录，与同类历史批次做趋势对比 |
 | 报告导出 | 打印 / 导出分析报告 |
+| 实验操作知识库 | 收录标准 SOP；每步含操作要点、作用、可展开的详细子步骤、关键参数、观察判定与分级易错点 |
 
 ## 技术架构
 
@@ -42,7 +43,8 @@ Demo/
 │   ├── knowledge-base.js  # 实验类型、指标阈值、诊断规则
 │   ├── analyzer.js        # 推理引擎：异常检测、可能性评分、总结生成
 │   ├── store.js           # 服务端持久化（原子写入）
-│   └── seed-data.js       # 演示数据
+│   ├── seed-data.js       # 演示数据
+│   └── protocol-knowledge.js # 实验操作知识库：SOP、详细步骤、参数、易错点
 ├── public/                # 前端页面
 ├── data/                  # 运行时数据存储目录
 └── package.json
@@ -61,6 +63,8 @@ Demo/
 | GET | `/api/stats` | 统计数据 |
 | POST | `/api/seed` | 载入演示数据 |
 | GET | `/api/health` | 健康检查 |
+| GET | `/api/protocols` | 实验操作知识库条目列表 |
+| GET | `/api/protocols/:id` | 单条实验 SOP（详细步骤、参数、观察判定、易错点） |
 
 ## 说明
 

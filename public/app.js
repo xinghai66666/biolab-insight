@@ -286,6 +286,9 @@ async function renderProtocol(id) {
     const levelText = { critical: '高危', high: '高', medium: '中', low: '低' };
     const steps = protocol.steps.map(s => {
       const pitfalls = s.pitfalls.map(p => `<div class="kb-pitfall ${p.level}"><div class="kb-pitfall-head"><span class="kb-pitfall-level">${levelText[p.level] || p.level}</span><span class="kb-pitfall-title">${esc(p.title)}</span></div><div class="kb-pitfall-row"><strong>后果：</strong>${esc(p.consequence)}</div><div class="kb-pitfall-row fix"><strong>规避：</strong>${esc(p.fix)}</div></div>`).join('');
+      const substeps = (s.substeps || []).map(x => `<li>${esc(x)}</li>`).join('');
+      const params = (s.params || []).map(p => `<div class="kb-param"><div class="kb-param-label">${esc(p.label)}</div><div class="kb-param-value">${esc(p.value)}</div></div>`).join('');
+      const checkpoints = (s.checkpoints || []).map(x => `<li>${esc(x)}</li>`).join('');
       return `<div class="kb-step">
         <div class="kb-step-head">
           <span class="kb-step-no">${s.no}</span>
@@ -294,9 +297,15 @@ async function renderProtocol(id) {
           <span class="kb-chevron">▼</span>
         </div>
         <div class="kb-step-body">
+          <div class="kb-op-summary"><div class="kb-op-label">本步操作</div><div class="kb-op-text">${esc(s.summary || s.detail)}</div></div>
           <div class="kb-purpose"><div class="kb-purpose-label">这一步的作用</div><div class="kb-purpose-text">${esc(s.purpose)}</div></div>
-          <button class="kb-detail-toggle" type="button">▸ 显示操作细节</button>
-          <div class="kb-detail-body">${esc(s.detail)}</div>
+          <button class="kb-detail-toggle" type="button">▸ 显示详细步骤</button>
+          <div class="kb-detail-body">
+            ${s.detail ? `<div class="kb-detail-intro">${esc(s.detail)}</div>` : ''}
+            ${substeps ? `<div class="kb-detail-section"><div class="kb-detail-label">详细操作步骤</div><ol class="kb-substeps">${substeps}</ol></div>` : ''}
+            ${params ? `<div class="kb-detail-section"><div class="kb-detail-label">关键参数</div><div class="kb-param-grid">${params}</div></div>` : ''}
+            ${checkpoints ? `<div class="kb-detail-section"><div class="kb-detail-label">观察与判定</div><ul class="kb-checkpoints">${checkpoints}</ul></div>` : ''}
+          </div>
           <div class="kb-pitfalls"><div class="kb-pitfalls-title">易出现失误之处</div>${pitfalls}</div>
         </div>
       </div>`;
@@ -314,7 +323,7 @@ async function renderProtocol(id) {
         ${specs}
       </div>
       <div class="panel">
-        <div class="panel-head"><h2>标准操作步骤（${protocol.steps.length} 步）</h2><span class="head-hint">点击步骤展开 · 细节默认隐藏 · 易错点已标注</span></div>
+        <div class="panel-head"><h2>标准操作步骤（${protocol.steps.length} 步）</h2><span class="head-hint">点击步骤展开 · 详细步骤默认隐藏 · 易错点已标注</span></div>
         ${steps}
       </div>
       <div class="panel"><div class="panel-head"><h2>参考依据</h2></div>${refs}
@@ -328,7 +337,7 @@ async function renderProtocol(id) {
       e.stopPropagation();
       const body = b.nextElementSibling;
       const show = body.classList.toggle('show');
-      b.textContent = show ? '▾ 隐藏操作细节' : '▸ 显示操作细节';
+      b.textContent = show ? '▾ 隐藏详细步骤' : '▸ 显示详细步骤';
     }));
     applyPitfallVisibility();
   } catch (e) { toast('知识库渲染失败：' + e.message); }
@@ -339,11 +348,15 @@ function applyPitfallVisibility() {
 }
 
 $('#kbProtocolSelect').addEventListener('change', e => renderProtocol(e.target.value));
-$('#kbExpandAll').addEventListener('click', () => $$('#kbContent .kb-step').forEach(s => s.classList.add('open')));
+$('#kbExpandAll').addEventListener('click', () => {
+  $$('#kbContent .kb-step').forEach(s => s.classList.add('open'));
+  $$('#kbContent .kb-detail-body').forEach(b => b.classList.add('show'));
+  $$('#kbContent .kb-detail-toggle').forEach(b => b.textContent = '▾ 隐藏详细步骤');
+});
 $('#kbCollapseAll').addEventListener('click', () => {
   $$('#kbContent .kb-step').forEach(s => s.classList.remove('open'));
   $$('#kbContent .kb-detail-body').forEach(b => b.classList.remove('show'));
-  $$('#kbContent .kb-detail-toggle').forEach(b => b.textContent = '▸ 显示操作细节');
+  $$('#kbContent .kb-detail-toggle').forEach(b => b.textContent = '▸ 显示详细步骤');
 });
 $('#kbTogglePitfalls').addEventListener('click', e => {
   kbPitfallsHidden = !kbPitfallsHidden;
