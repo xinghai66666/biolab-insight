@@ -506,6 +506,7 @@ function qaWelcome() {
       intentLabel: '使用说明',
       confidence: 'high',
       blocks: [
+        { type: 'lead', text: '我是实验问答助手', sub: '问实验细节、参数、判定与异常原因，回答都带来源' },
         { type: 'para', title: '可以问什么', text: '实验原理与每一步的作用、关键参数与操作细节、判定与质控范围、常见失误与排查方向，以及试剂的作用、成分与储存。' },
         { type: 'list', title: '几种问法', items: [
           '无内毒素质粒小提 A260/A280 偏低说明什么？',
