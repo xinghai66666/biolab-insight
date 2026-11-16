@@ -3,6 +3,7 @@ package-lock.json
 capture-screenshots.js
 capture-kb.js
 capture-qa.js
+capture-settings.js
 data/experiments.json
 data/*.tmp.*
 *.log

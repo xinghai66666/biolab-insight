@@ -24,6 +24,7 @@
       <button class="nav-item" data-view="protocol" title="实验知识库"><span class="nav-ico">▤</span><span class="nav-label">实验知识库</span></button>
       <button class="nav-item" data-view="qa" title="实验问答"><span class="nav-ico">✦</span><span class="nav-label">实验问答</span></button>
       <button class="nav-item" data-view="about" title="关于与说明"><span class="nav-ico">ⓘ</span><span class="nav-label">关于与说明</span></button>
+      <button class="nav-item" data-view="settings" title="设置"><span class="nav-ico">⚙</span><span class="nav-label">设置</span></button>
     </nav>
     <div class="sidebar-foot">
       <div class="engine-badge"><span class="dot"></span><span class="foot-text">推理引擎就绪</span></div>
@@ -160,6 +161,53 @@
       </div>
     </section>
 
+    <!-- 设置 -->
+    <section class="view" id="view-settings">
+      <div class="settings-grid">
+        <div class="panel">
+          <div class="panel-head"><h2>外观模式</h2><span class="head-hint">夜间模式降低亮度，适合暗环境长时间查看</span></div>
+          <div class="set-options" id="setTheme">
+            <button class="set-opt active" type="button" data-theme-opt="light">☀ 浅色</button>
+            <button class="set-opt" type="button" data-theme-opt="dark">☾ 夜间</button>
+            <button class="set-opt" type="button" data-theme-opt="auto">◐ 跟随系统</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h2>背景颜色</h2><span class="head-hint">低饱和底色，夜间模式自动切换为深色版本</span></div>
+          <div class="set-swatches" id="setBg">
+            <button class="swatch active" type="button" data-bg-opt="default"><span class="swatch-dot default"></span>默认冷灰</button>
+            <button class="swatch" type="button" data-bg-opt="warm"><span class="swatch-dot warm"></span>暖米色</button>
+            <button class="swatch" type="button" data-bg-opt="blue"><span class="swatch-dot blue"></span>雾蓝色</button>
+            <button class="swatch" type="button" data-bg-opt="mint"><span class="swatch-dot mint"></span>浅绿色</button>
+            <button class="swatch" type="button" data-bg-opt="violet"><span class="swatch-dot violet"></span>淡紫色</button>
+          </div>
+        </div>
+
+        <div class="panel full">
+          <div class="panel-head"><h2>字号大小</h2><span class="head-hint">影响全站文字，卡片与表格随之自适应</span></div>
+          <div class="set-options" id="setFs">
+            <button class="set-opt" type="button" data-fs-opt="sm">小</button>
+            <button class="set-opt active" type="button" data-fs-opt="md">标准</button>
+            <button class="set-opt" type="button" data-fs-opt="lg">大</button>
+            <button class="set-opt" type="button" data-fs-opt="xl">特大</button>
+          </div>
+          <div class="set-preview">
+            <div class="set-preview-title">预览：CHO 种子细胞扩增 · 批次 C-2601</div>
+            <p>细胞活率 78%，低于正常下限 90%。提示培养条件偏移或营养耗竭，建议核对换液周期与培养箱参数，并复测活率确认。</p>
+          </div>
+        </div>
+
+        <div class="panel full">
+          <div class="panel-head"><h2>其他</h2></div>
+          <div class="set-actions">
+            <button class="btn ghost" type="button" id="setReset">恢复默认设置</button>
+          </div>
+          <p class="set-note">设置仅在当前会话生效：为不在浏览器端残留数据，外观偏好不写入本地存储，刷新页面后回到默认外观。</p>
+        </div>
+      </div>
+    </section>
+
     <!-- 关于 -->
     <section class="view" id="view-about">
       <div class="panel about">
@@ -173,6 +221,7 @@
           <li>健康度评分与四级预警，历史批次对比</li>
           <li>实验知识库：13 个实验、100 个步骤，支持详细步骤折叠、试剂知识卡与 NanoDrop 读数解读</li>
           <li>实验问答：自然语言提问实验细节，回答标注来源并可跳转到对应步骤核对</li>
+          <li>外观设置：字号四档、五种背景颜色、夜间模式与跟随系统；偏好不写入浏览器存储</li>
         </ul>
         <h3>数据与架构</h3>
         <p>后端采用 Node.js 原生模块构建 REST API，全部业务数据保存在服务端数据文件中（原子写入），浏览器端不保存任何业务数据。分析引擎为「领域知识库 + 证据加权推理」，规则可插拔扩展；实验问答为本地检索式实现，不联网、不调用外部大模型，回答均标注知识来源。</p>

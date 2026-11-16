@@ -32,6 +32,7 @@ function switchView(view) {
     records: ['实验记录', '全部历史实验与分析结果'],
     protocol: ['实验知识库', '标准操作步骤 · 作用说明 · 易错点提示'],
     qa: ['实验问答', '问实验细节、参数与疑惑，回答均标注知识来源'],
+    settings: ['设置', '外观与阅读偏好：字号大小、背景颜色与夜间模式'],
     about: ['关于与说明', '系统能力、数据架构与使用说明']
   };
   $('#viewTitle').textContent = titles[view][0];
@@ -40,6 +41,7 @@ function switchView(view) {
   if (view === 'records') loadRecords();
   if (view === 'protocol') loadProtocolList();
   if (view === 'qa') initQa();
+  if (view === 'settings') applyUi();
 }
 
 $$('.nav-item').forEach(b => b.addEventListener('click', () => switchView(b.dataset.view)));
@@ -70,6 +72,55 @@ $('.main').addEventListener('click', () => {
 });
 
 setSidebarCollapsed(false);
+
+/* ===== 外观设置：字号 / 背景颜色 / 夜间模式 ===== */
+const UI_DEFAULTS = { theme: 'light', bg: 'default', fs: 'md' };
+const ui = { ...UI_DEFAULTS };
+const rootEl = document.documentElement;
+const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+function resolvedTheme() {
+  return ui.theme === 'auto' ? (darkQuery.matches ? 'dark' : 'light') : ui.theme;
+}
+
+function applyUi() {
+  rootEl.dataset.theme = resolvedTheme();
+  rootEl.dataset.bg = ui.bg;
+  rootEl.dataset.fs = ui.fs;
+  $$('#setTheme .set-opt').forEach(b => b.classList.toggle('active', b.dataset.themeOpt === ui.theme));
+  $$('#setBg .swatch').forEach(b => b.classList.toggle('active', b.dataset.bgOpt === ui.bg));
+  $$('#setFs .set-opt').forEach(b => b.classList.toggle('active', b.dataset.fsOpt === ui.fs));
+}
+
+const onSystemThemeChange = () => { if (ui.theme === 'auto') applyUi(); };
+if (darkQuery.addEventListener) darkQuery.addEventListener('change', onSystemThemeChange);
+else if (darkQuery.addListener) darkQuery.addListener(onSystemThemeChange);
+
+$('#setTheme').addEventListener('click', e => {
+  const btn = e.target.closest('[data-theme-opt]');
+  if (!btn) return;
+  ui.theme = btn.dataset.themeOpt;
+  applyUi();
+});
+$('#setBg').addEventListener('click', e => {
+  const btn = e.target.closest('[data-bg-opt]');
+  if (!btn) return;
+  ui.bg = btn.dataset.bgOpt;
+  applyUi();
+});
+$('#setFs').addEventListener('click', e => {
+  const btn = e.target.closest('[data-fs-opt]');
+  if (!btn) return;
+  ui.fs = btn.dataset.fsOpt;
+  applyUi();
+});
+$('#setReset').addEventListener('click', () => {
+  Object.assign(ui, UI_DEFAULTS);
+  applyUi();
+  toast('已恢复默认外观');
+});
+
+applyUi();
 
 const riskClass = k => ({ low: 'low', medium: 'medium', high: 'high', critical: 'critical' }[k] || 'low');
 
