@@ -1,0 +1,16 @@
+{
+  "name": "biolab-insight",
+  "version": "1.0.0",
+  "description": "BioLab Insight · 生物制药实验智能分析智能体 — 实验总结与问题定位",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": ["biopharma", "agent", "experiment-analysis", "aigc", "aicoding"],
+  "license": "MIT",
+  "dependencies": {}
+}
