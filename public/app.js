@@ -362,8 +362,22 @@ async function loadProtocolList() {
   try {
     const { protocols } = await api('/api/protocols');
     const sel = $('#kbProtocolSelect');
-    sel.innerHTML = protocols.map(p => `<option value="${p.id}">${esc(p.name)}（${p.stepCount} 步 · ${p.pitfallCount} 处易错点）</option>`).join('');
-    if (protocols.length) await renderProtocol(protocols[0].id);
+    const current = sel.value;
+    const totalSteps = protocols.reduce((n, p) => n + p.stepCount, 0);
+    const countEl = $('#kbProtocolCount');
+    if (countEl) countEl.textContent = `共 ${protocols.length} 个实验 · ${totalSteps} 个步骤`;
+    const groups = new Map();
+    protocols.forEach(p => {
+      const group = (p.category || '').split(' · ')[0] || '其他';
+      if (!groups.has(group)) groups.set(group, []);
+      groups.get(group).push(p);
+    });
+    sel.innerHTML = [...groups.entries()].map(([group, items]) => `<optgroup label="${esc(group)}">${items.map(p => `<option value="${p.id}" title="${esc(p.short)}">${esc(p.name)}（${p.stepCount} 步 · ${p.pitfallCount} 处易错）</option>`).join('')}</optgroup>`).join('');
+    const nextId = protocols.some(p => p.id === current) ? current : (protocols[0] && protocols[0].id);
+    if (nextId) {
+      sel.value = nextId;
+      await renderProtocol(nextId);
+    }
   } catch (e) { toast('知识库加载失败：' + e.message); }
 }
 

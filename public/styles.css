@@ -170,7 +170,9 @@ body{
 /* ===== 实验知识库 ===== */
 .kb-toolbar{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:18px}
 .kb-select-wrap{display:flex;flex-direction:column;gap:6px;min-width:320px;flex:1}
+.kb-label-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .kb-label{font-size:12px;color:var(--muted);font-weight:600}
+.kb-count{font-size:11px;color:var(--muted)}
 .kb-select-wrap select{border:1px solid var(--line-strong);border-radius:8px;padding:9px 11px;font-size:14px;font-family:inherit;background:#fff;color:var(--text);font-weight:600}
 .kb-toolbar-actions{display:flex;gap:8px;flex-wrap:wrap}
 .kb-overview{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}

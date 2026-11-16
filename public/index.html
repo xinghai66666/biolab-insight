@@ -125,10 +125,10 @@
     <!-- 实验知识库 -->
     <section class="view" id="view-protocol">
       <div class="kb-toolbar">
-        <div class="kb-select-wrap">
-          <label class="kb-label">选择实验</label>
-          <select id="kbProtocolSelect"></select>
-        </div>
+            <div class="kb-select-wrap">
+              <div class="kb-label-row"><label class="kb-label">选择实验</label><span class="kb-count" id="kbProtocolCount"></span></div>
+              <select id="kbProtocolSelect"></select>
+            </div>
         <div class="kb-toolbar-actions">
           <button class="btn ghost" id="kbExpandAll">展开全部细节</button>
           <button class="btn ghost" id="kbCollapseAll">收起全部细节</button>
@@ -149,6 +149,7 @@
           <li>异常检测：指标越界、对照失效、重复孔 CV 过高、历史趋势漂移、组合异常</li>
           <li>问题定位：证据 + 可能性评分 + 严重程度 + 原因假设 + 排查建议</li>
           <li>健康度评分与四级预警，历史批次对比</li>
+          <li>实验知识库：13 个实验、100 个步骤，支持详细步骤折叠、试剂知识卡与 NanoDrop 读数解读</li>
         </ul>
         <h3>数据与架构</h3>
         <p>后端采用 Node.js 原生模块构建 REST API，全部业务数据保存在服务端数据文件中（原子写入），浏览器端不保存任何业务数据。分析引擎为「领域知识库 + 证据加权推理」，规则可插拔扩展。</p>
