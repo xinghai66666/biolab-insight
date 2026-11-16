@@ -1,4 +1,6 @@
 node_modules/
+package-lock.json
+capture-screenshots.js
 data/experiments.json
 data/*.tmp.*
 *.log
