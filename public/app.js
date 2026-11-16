@@ -283,7 +283,7 @@ async function renderProtocol(id) {
 
     const specs = `<table class="kb-specs"><thead><tr><th>质控指标</th><th>参考范围</th><th>说明</th></tr></thead><tbody>${protocol.keySpecs.map(s => `<tr><td>${esc(s.label)}</td><td class="spec-val">${esc(s.value)}</td><td>${esc(s.note)}</td></tr>`).join('')}</tbody></table>`;
 
-    const levelText = { critical: '高危', medium: '中', low: '低' };
+    const levelText = { critical: '高危', high: '高', medium: '中', low: '低' };
     const steps = protocol.steps.map(s => {
       const pitfalls = s.pitfalls.map(p => `<div class="kb-pitfall ${p.level}"><div class="kb-pitfall-head"><span class="kb-pitfall-level">${levelText[p.level] || p.level}</span><span class="kb-pitfall-title">${esc(p.title)}</span></div><div class="kb-pitfall-row"><strong>后果：</strong>${esc(p.consequence)}</div><div class="kb-pitfall-row fix"><strong>规避：</strong>${esc(p.fix)}</div></div>`).join('');
       return `<div class="kb-step">
