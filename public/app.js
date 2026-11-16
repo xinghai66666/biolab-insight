@@ -23,6 +23,7 @@ function toast(msg) {
 }
 
 function switchView(view) {
+  const prevActive = document.querySelector('.view.active');
   $$('.nav-item').forEach(b => b.classList.toggle('active', b.dataset.view === view));
   $$('.view').forEach(v => v.classList.remove('active'));
   $('#view-' + view).classList.add('active');
@@ -42,6 +43,8 @@ function switchView(view) {
   if (view === 'protocol') loadProtocolList();
   if (view === 'qa') initQa();
   if (view === 'settings') applyUi();
+  // 切换视图时回到页面顶部，避免沿用上一页的滚动位置
+  if (!prevActive || prevActive.id !== 'view-' + view) window.scrollTo(0, 0);
 }
 
 $$('.nav-item').forEach(b => b.addEventListener('click', () => switchView(b.dataset.view)));
@@ -550,12 +553,13 @@ async function loadProtocolList() {
     const nextId = protocols.some(p => p.id === current) ? current : (protocols[0] && protocols[0].id);
     if (nextId) {
       sel.value = nextId;
-      await renderProtocol(nextId);
+      // 视图切换时已回到顶部，这里不再触发回顶，避免打断「跳转到指定步骤」
+      await renderProtocol(nextId, { keepScroll: true });
     }
   } catch (e) { toast('知识库加载失败：' + e.message); }
 }
 
-async function renderProtocol(id) {
+async function renderProtocol(id, opts = {}) {
   try {
     const { protocol } = await api('/api/protocols/' + encodeURIComponent(id));
     kbCurrent = protocol;
@@ -640,6 +644,10 @@ async function renderProtocol(id) {
       b.textContent = show ? '▾ 隐藏详细步骤' : '▸ 显示详细步骤';
     }));
     applyPitfallVisibility();
+    // 切换实验后回到知识库顶部，避免停留在上一个实验的滚动位置
+    if (!opts.keepScroll && $('#view-protocol').classList.contains('active') && window.scrollY > 24) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   } catch (e) { toast('知识库渲染失败：' + e.message); }
 }
 
@@ -822,7 +830,7 @@ async function openProtocolStep(protocolId, stepNo) {
     const sel = $('#kbProtocolSelect');
     if (protocolId && sel.value !== protocolId) {
       sel.value = protocolId;
-      await renderProtocol(protocolId);
+      await renderProtocol(protocolId, { keepScroll: true });
     }
     if (stepNo) {
       const step = document.querySelectorAll('#kbContent .kb-step')[Number(stepNo) - 1];
