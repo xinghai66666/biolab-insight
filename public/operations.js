@@ -170,6 +170,23 @@ const OP_DESC = {
   balance: '称量试剂与样品的质量，是配制溶液、投料与记录的基础。'
 };
 
+
+/* 每个操作的分步流程：点击卡片后在详情弹窗中展示 */
+const OP_FLOW = {
+  pipetting: ['选择量程匹配的移液器并装枪头', '预润湿枪头 2–3 次', '垂直吸液，缓慢松开按钮', '贴壁分液，更换枪头'],
+  centrifugation: ['检查离心管无破损并配平', '对称放入转子并拧紧盖', '设定转速、时间与温度', '转子停稳后开盖取管'],
+  vortexing: ['盖紧管盖，避免溅出', '按体积选择合适速度', '点动混匀 3–5 秒', '瞬时离心收集管壁液滴'],
+  pcr_setup: ['冰上配制 Master Mix', '分装到各反应管', '在独立区域加入模板', '瞬时离心后立即上机'],
+  gel_loading: ['配胶并预电泳', '样品与 Loading Buffer 混匀', '依次上样并记录孔位', '恒压电泳至指示剂到位'],
+  aseptic: ['紫外照射并擦拭台面', '物品表面消毒后传入', '火焰灭菌后稍冷却', '完成操作并清理台面'],
+  nanodrop: ['清洁检测面并做空白', '加 1–2 µL 样品', '放下检测臂读取数据', '擦拭检测面收尾'],
+  centrifuge_inst: ['检查转子型号与盖锁', '配平并对称放置', '设定参数后启动', '停稳取样品并清洁'],
+  thermal_cycler: ['设置程序与热盖温度', '放入反应管或板并压紧', '启动并确认运行状态', '结束后及时取出样品'],
+  plate_reader: ['开机预热并选择波长', '擦净板底后放入', '读板并核对板图', '导出数据并复核异常孔'],
+  ph_meter: ['用两点标准液校准', '润洗并用滤纸吸干电极', '测量至读数稳定', '电极浸泡保存'],
+  balance: ['调节水平并预热', '关门后归零', '加样并等待读数稳定', '清洁秤盘并归位']
+};
+
 function renderOperations() {
   const box = document.getElementById('operationsContent');
   if (!box || box.dataset.ready) return;
@@ -179,8 +196,8 @@ function renderOperations() {
       <div class="op-group-head"><h3>${esc(group.title)}</h3><span class="head-hint">${esc(group.desc)}</span></div>
       <div class="op-grid">
         ${group.items.map(item => `
-          <article class="op-card">
-            <div class="op-figure">${OP_ICONS[item.icon] || ''}<span>${esc(item.name)}</span></div>
+          <article class="op-card" data-op="${esc(item.id)}" tabindex="0" role="button" aria-label="查看${esc(item.name)}操作图解">
+            <div class="op-figure">${OP_ICONS[item.icon] || ''}<span>${esc(item.name)}</span><em class="op-figure-more">查看图解 →</em></div>
             <div class="op-card-body">
               <p class="op-desc">${esc(OP_DESC[item.id] || '')}</p>
               <ul>${item.points.map(p => `<li>${esc(p)}</li>`).join('')}</ul>
@@ -190,3 +207,59 @@ function renderOperations() {
       </div>
     </div>`).join('');
 }
+
+
+/* 操作图解详情弹窗 */
+function opDetailHtml(item) {
+  const flow = (OP_FLOW[item.id] || []).map((step, i) =>
+    `<div class="op-flow-step"><span class="op-flow-no">${i + 1}</span><span class="op-flow-text">${esc(step)}</span></div>`).join('');
+  return `<div class="op-modal-card" role="dialog" aria-modal="true" aria-label="${esc(item.name)}操作图解">
+      <button type="button" class="op-modal-close" data-op-close aria-label="关闭">×</button>
+      <div class="op-modal-figure">${OP_ICONS[item.icon] || ''}<div class="op-modal-name">${esc(item.name)}</div></div>
+      <div class="op-modal-body">
+        <p class="op-modal-desc">${esc(OP_DESC[item.id] || '')}</p>
+        <div class="op-flow-label">操作流程</div>
+        <div class="op-flow">${flow}</div>
+        <div class="op-modal-section">操作要点</div>
+        <ul class="op-modal-points">${item.points.map(p => `<li>${esc(p)}</li>`).join('')}</ul>
+        <div class="op-tip"><strong>提示</strong>${esc(item.tip)}</div>
+      </div>
+    </div>`;
+}
+
+function openOpDetail(id) {
+  const item = OP_GROUPS.flatMap(g => g.items).find(x => x.id === id);
+  if (!item) return;
+  let modal = document.getElementById('opModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'opModal';
+    modal.className = 'op-modal';
+    modal.hidden = true;
+    document.body.appendChild(modal);
+  }
+  modal.innerHTML = '<div class="op-modal-mask" data-op-close></div>' + opDetailHtml(item);
+  modal.hidden = false;
+  document.body.classList.add('op-modal-open');
+  modal.querySelector('.op-modal-close')?.focus();
+
+  const close = () => {
+    modal.hidden = true;
+    document.body.classList.remove('op-modal-open');
+    document.removeEventListener('keydown', onKey);
+    const card = document.querySelector(`.op-card[data-op="${id}"]`);
+    if (card) card.focus();
+  };
+  const onKey = e => { if (e.key === 'Escape') close(); };
+  modal.addEventListener('click', e => { if (e.target.closest('[data-op-close]')) close(); });
+  document.addEventListener('keydown', onKey);
+}
+
+document.addEventListener('click', e => {
+  const card = e.target.closest('.op-card[data-op]');
+  if (card) { openOpDetail(card.dataset.op); }
+});
+document.addEventListener('keydown', e => {
+  const card = e.target.closest && e.target.closest('.op-card[data-op]');
+  if (card && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openOpDetail(card.dataset.op); }
+});

@@ -95,6 +95,7 @@ sidebarExpand.addEventListener('click', e => {
 document.addEventListener('click', e => {
   if (appEl.classList.contains('collapsed')) return;
   if (e.target.closest('#sidebar')) return;
+  if (document.body.classList.contains('op-modal-open')) return;   // 弹窗内操作不收起侧边栏
   setSidebarCollapsed(true);
 });
 
