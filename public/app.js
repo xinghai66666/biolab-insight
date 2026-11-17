@@ -47,6 +47,15 @@ function switchView(view) {
   if (!prevActive || prevActive.id !== 'view-' + view) window.scrollTo(0, 0);
 }
 
+// 折叠态在图标后显示短名称，避免只剩图标难以辨认
+const NAV_SHORT = { qa: '问答', dashboard: '数据', new: '分析', records: '记录', protocol: '知识', about: '说明', settings: '设置' };
+$$('.nav-item').forEach(b => {
+  const short = document.createElement('span');
+  short.className = 'nav-short';
+  short.textContent = NAV_SHORT[b.dataset.view] || (b.querySelector('.nav-label')?.textContent || '').slice(0, 2);
+  b.appendChild(short);
+});
+
 $$('.nav-item').forEach(b => b.addEventListener('click', () => {
   // 折叠状态下点任一导航图标即展开侧边栏，避免找不到展开入口
   if (appEl.classList.contains('collapsed')) setSidebarCollapsed(false);
