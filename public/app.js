@@ -32,6 +32,7 @@ function switchView(view) {
     new: ['实验分析', '录入实验数据，获取结构化总结与问题诊断'],
     records: ['实验记录', '全部历史实验与分析结果'],
     protocol: ['实验知识库', '标准操作步骤 · 作用说明 · 易错点提示'],
+    operations: ['实验操作库', '基本实验操作与常用仪器的规范操作图解'],
     qa: ['实验问答', '问实验细节、参数与疑惑，回答均标注知识来源'],
     settings: ['设置', '外观与阅读偏好：字号大小、背景颜色与夜间模式'],
     about: ['说明', '系统能力、数据架构与使用说明']
@@ -43,12 +44,13 @@ function switchView(view) {
   if (view === 'protocol') loadProtocolList();
   if (view === 'qa') initQa();
   if (view === 'settings') applyUi();
+  if (view === 'operations') renderOperations();
   // 切换视图时回到页面顶部，避免沿用上一页的滚动位置
   if (!prevActive || prevActive.id !== 'view-' + view) window.scrollTo(0, 0);
 }
 
 // 折叠态在图标后显示短名称，避免只剩图标难以辨认
-const NAV_SHORT = { qa: '问答', dashboard: '数据', new: '分析', records: '记录', protocol: '知识', about: '说明', settings: '设置' };
+const NAV_SHORT = { qa: '问答', dashboard: '数据', new: '分析', records: '记录', protocol: '知识', operations: '操作', about: '说明', settings: '设置' };
 $$('.nav-item').forEach(b => {
   const short = document.createElement('span');
   short.className = 'nav-short';
@@ -597,6 +599,58 @@ window.addEventListener('scroll', () => {
   positionReagentCard(activeReagentEl);
 }, true);
 
+/* 实验知识库：自定义实验选择器（面板固定在控件下方，不随原生弹层偏移） */
+let kbPickerProtocols = [];
+let kbPickerOpen = false;
+
+function renderKbPicker(filter = '') {
+  const list = $('#kbPickerList');
+  if (!list) return;
+  const kw = String(filter).trim().toLowerCase();
+  const items = kbPickerProtocols.filter(p =>
+    !kw || p.name.toLowerCase().includes(kw) || String(p.short || '').toLowerCase().includes(kw));
+  const groups = new Map();
+  items.forEach(p => {
+    const g = (p.category || '').split(' · ')[0] || '其他';
+    if (!groups.has(g)) groups.set(g, []);
+    groups.get(g).push(p);
+  });
+  const current = $('#kbProtocolSelect') ? $('#kbProtocolSelect').value : '';
+  list.innerHTML = groups.size
+    ? [...groups.entries()].map(([g, arr]) =>
+        `<div class="kb-picker-group">${esc(g)}</div>` + arr.map(p =>
+          `<button type="button" class="kb-picker-item${p.id === current ? ' active' : ''}" data-id="${esc(p.id)}"><span>${esc(p.name)}</span><span class="kb-picker-meta">${p.stepCount} 步 · ${p.pitfallCount} 处易错</span></button>`).join('')
+      ).join('')
+    : '<div class="kb-picker-empty">没有匹配的实验</div>';
+}
+
+function updateKbPickerLabel(id) {
+  const p = kbPickerProtocols.find(x => x.id === id);
+  const label = $('#kbPickerLabel');
+  if (label) label.textContent = p ? `${p.name}（${p.stepCount} 步）` : '选择实验';
+}
+
+function setKbPickerOpen(open) {
+  const panel = $('#kbPickerPanel');
+  if (!panel) return;
+  panel.hidden = !open;
+  kbPickerOpen = !!open;
+  if (open) {
+    const search = $('#kbPickerSearch');
+    if (search) { search.value = ''; renderKbPicker(); search.focus(); }
+  }
+}
+
+async function selectProtocol(id) {
+  const sel = $('#kbProtocolSelect');
+  if (!sel || !id) return;
+  sel.value = id;
+  updateKbPickerLabel(id);
+  setKbPickerOpen(false);
+  await renderProtocol(id);
+}
+window.__selectProtocol = selectProtocol;
+
 async function loadProtocolList() {
   try {
     const { protocols } = await api('/api/protocols');
@@ -605,16 +659,14 @@ async function loadProtocolList() {
     const totalSteps = protocols.reduce((n, p) => n + p.stepCount, 0);
     const countEl = $('#kbProtocolCount');
     if (countEl) countEl.textContent = `共 ${protocols.length} 个实验 · ${totalSteps} 个步骤`;
-    const groups = new Map();
-    protocols.forEach(p => {
-      const group = (p.category || '').split(' · ')[0] || '其他';
-      if (!groups.has(group)) groups.set(group, []);
-      groups.get(group).push(p);
-    });
-    sel.innerHTML = [...groups.entries()].map(([group, items]) => `<optgroup label="${esc(group)}">${items.map(p => `<option value="${p.id}" title="${esc(p.short)}">${esc(p.name)}（${p.stepCount} 步 · ${p.pitfallCount} 处易错）</option>`).join('')}</optgroup>`).join('');
+    sel.innerHTML = '<option value="">选择实验</option>' +
+      protocols.map(p => `<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('');
+    kbPickerProtocols = protocols;
+    renderKbPicker();
     const nextId = protocols.some(p => p.id === current) ? current : (protocols[0] && protocols[0].id);
     if (nextId) {
       sel.value = nextId;
+      updateKbPickerLabel(nextId);
       // 视图切换时已回到顶部，这里不再触发回顶，避免打断「跳转到指定步骤」
       await renderProtocol(nextId, { keepScroll: true });
     }
@@ -717,7 +769,18 @@ function applyPitfallVisibility() {
   $$('#kbContent .kb-pitfalls').forEach(el => el.classList.toggle('hidden', kbPitfallsHidden));
 }
 
-$('#kbProtocolSelect').addEventListener('change', e => renderProtocol(e.target.value));
+$('#kbPickerTrigger').addEventListener('click', e => { e.stopPropagation(); setKbPickerOpen(!kbPickerOpen); });
+$('#kbPickerSearch').addEventListener('input', e => renderKbPicker(e.target.value));
+$('#kbPickerList').addEventListener('click', e => {
+  const item = e.target.closest('.kb-picker-item');
+  if (item) selectProtocol(item.dataset.id);
+});
+document.addEventListener('click', e => {
+  if (kbPickerOpen && !e.target.closest('#kbPicker')) setKbPickerOpen(false);
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && kbPickerOpen) setKbPickerOpen(false);
+});
 $('#kbExpandAll').addEventListener('click', () => {
   $$('#kbContent .kb-step').forEach(s => s.classList.add('open'));
   $$('#kbContent .kb-detail-body').forEach(b => b.classList.add('show'));

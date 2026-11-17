@@ -21,13 +21,12 @@
     </div>
     <button class="sidebar-expand" id="sidebarExpand" type="button" title="展开侧边栏" aria-label="展开侧边栏">»</button>
     <nav class="nav">
-      <div class="nav-group-title">分析工作区</div>
       <button class="nav-item active" data-view="qa" title="实验问答"><span class="nav-ico">✦</span><span class="nav-label">实验问答</span></button>
       <button class="nav-item" data-view="dashboard" title="实验数据中心"><span class="nav-ico">◧</span><span class="nav-label">实验数据中心</span></button>
       <button class="nav-item" data-view="new" title="实验分析"><span class="nav-ico">＋</span><span class="nav-label">实验分析</span></button>
       <button class="nav-item" data-view="records" title="实验记录"><span class="nav-ico">☰</span><span class="nav-label">实验记录</span></button>
-      <div class="nav-group-title">知识与支持</div>
       <button class="nav-item" data-view="protocol" title="实验知识库"><span class="nav-ico">▤</span><span class="nav-label">实验知识库</span></button>
+      <button class="nav-item" data-view="operations" title="实验操作库"><span class="nav-ico">⚒</span><span class="nav-label">实验操作库</span></button>
       <button class="nav-item" data-view="about" title="说明"><span class="nav-ico">ⓘ</span><span class="nav-label">说明</span></button>
       <button class="nav-item" data-view="settings" title="设置"><span class="nav-ico">⚙</span><span class="nav-label">设置</span></button>
     </nav>
@@ -139,7 +138,14 @@
       <div class="kb-toolbar">
             <div class="kb-select-wrap">
               <div class="kb-label-row"><label class="kb-label">选择实验</label><span class="kb-count" id="kbProtocolCount"></span></div>
-              <select id="kbProtocolSelect"></select>
+              <select id="kbProtocolSelect" style="display:none"></select>
+              <div class="kb-picker" id="kbPicker">
+                <button type="button" class="kb-picker-trigger" id="kbPickerTrigger"><span id="kbPickerLabel">选择实验</span><span class="kb-picker-caret">▾</span></button>
+                <div class="kb-picker-panel" id="kbPickerPanel" hidden>
+                  <input type="text" class="kb-picker-search" id="kbPickerSearch" placeholder="搜索实验名称或关键词…" maxlength="40">
+                  <div class="kb-picker-list" id="kbPickerList"></div>
+                </div>
+              </div>
             </div>
         <div class="kb-toolbar-actions">
           <button class="btn ghost" id="kbExpandAll">展开全部细节</button>
@@ -148,6 +154,15 @@
         </div>
       </div>
       <div id="kbContent" class="kb-content"><div class="empty">正在加载知识库…</div></div>
+    </section>
+
+    <!-- 实验操作库 -->
+    <section class="view" id="view-operations">
+      <div class="panel">
+        <div class="panel-head"><h2>操作图解</h2><span class="head-hint">通用参考流程 · 具体参数以本实验室 SOP 为准</span></div>
+        <p class="muted">把常见实验操作与仪器使用要点做成可查的图解卡片：先看图确认动作，再核对关键参数与易错点。</p>
+        <div id="operationsContent"></div>
+      </div>
     </section>
 
     <!-- 实验问答 -->
@@ -250,6 +265,7 @@
           <li>问题定位：证据 + 可能性评分 + 严重程度 + 原因假设 + 排查建议</li>
           <li>健康度评分与四级预警，历史批次对比</li>
           <li>实验知识库：71 个实验、555 个步骤，支持详细步骤折叠、试剂知识卡与 NanoDrop 读数解读</li>
+          <li>实验操作库：12 张图解卡片覆盖基本实验操作与常用仪器使用，含操作要点与实践提示</li>
           <li>实验问答：自然语言提问实验细节，回答标注来源并可跳转到对应步骤核对</li>
           <li>外观设置：字号四档、五种背景颜色、夜间模式与跟随系统；偏好不写入浏览器存储</li>
         </ul>
@@ -265,6 +281,7 @@
 <div id="reagentCard" class="reagent-card" role="dialog" aria-label="试剂知识卡" hidden></div>
 <div id="toast" class="toast"></div>
 
+<script src="operations.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
