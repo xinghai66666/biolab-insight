@@ -790,10 +790,28 @@ async function initQa() {
 }
 
 function fillQaScope() {
-  const sel = $('#qaScope');
-  if (!sel || !qaState.protocols || sel.options.length > 1) return;
-  sel.innerHTML = '<option value="">全部实验</option>' +
+  if (!qaState.protocols) return;
+  const options = '<option value="">全部实验</option>' +
     qaState.protocols.map(p => `<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('');
+  for (const id of ['#qaScope', '#qaScopeInline']) {
+    const sel = $(id);
+    if (sel && sel.options.length <= 1) sel.innerHTML = options;
+  }
+}
+
+/** 两处范围选择共用一份状态，保持同步 */
+function setQaScope(id, notify = true) {
+  qaState.context = { ...(qaState.context || {}), protocolId: id };
+  for (const selId of ['#qaScope', '#qaScopeInline']) {
+    const el = $(selId);
+    if (el && el.value !== id) el.value = id;
+  }
+  const name = id ? (qaState.protocols || []).find(p => p.id === id)?.name || '当前实验' : '全部实验';
+  const hint = $('#qaScopeHint');
+  if (hint) hint.textContent = id
+    ? `仅从《${name}》的步骤、质控指标与诊断规则中回答`
+    : '回答来自本地知识库检索，可点击来源跳到对应步骤';
+  if (notify) toast(`问答范围：${name}`);
 }
 
 function renderQaQuick() {
@@ -877,6 +895,11 @@ function syncQaHero() {
 async function askQa(question) {
   const q = String(question || '').trim();
   if (!q || qaState.busy) return;
+  // 在回复框的问题里只提到一个实验时，自动把它设为回答范围
+  if (!qaState.context?.protocolId) {
+    const named = (qaState.protocols || []).filter(p => q.includes(p.name));
+    if (named.length === 1) setQaScope(named[0].id, false);
+  }
   qaState.busy = true;
   // 首次提问后收起欢迎卡片，让对话更聚焦
   if (qaState.messages[0] && qaState.messages[0].welcome) qaState.messages.shift();
@@ -952,16 +975,8 @@ $('#qaInput').addEventListener('input', e => {
   e.target.style.height = 'auto';
   e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
 });
-$('#qaScope').addEventListener('change', e => {
-  const id = e.target.value;
-  qaState.context = { ...(qaState.context || {}), protocolId: id };
-  const name = id ? (qaState.protocols || []).find(p => p.id === id)?.name || '当前实验' : '全部实验';
-  const hint = $('#qaScopeHint');
-  if (hint) hint.textContent = id
-    ? `仅从《${name}》的步骤、质控指标与诊断规则中回答`
-    : '回答来自本地知识库检索，可点击来源跳到对应步骤';
-  toast(`问答范围：${name}`);
-});
+$('#qaScope').addEventListener('change', e => setQaScope(e.target.value));
+$('#qaScopeInline').addEventListener('change', e => setQaScope(e.target.value));
 
 $('#qaClear').addEventListener('click', () => {
   qaState.messages = [qaWelcome()];
