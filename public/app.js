@@ -760,10 +760,12 @@ async function initQa() {
     qaState.messages = [qaWelcome()];
     renderQaThread();
   }
-  if (qaState.quick.length) return;
+  if (qaState.quick.length) { fillQaScope(); return; }
   try {
     const data = await api('/api/qa/suggestions');
     qaState.quick = data.quick || [];
+    qaState.protocols = data.protocols || [];
+    fillQaScope();
     const c = data.coverage || {};
     const badge = $('#qaCoverage');
     if (badge && c.protocols) badge.textContent = `可检索 ${c.protocols} 个实验 · ${c.steps} 个步骤 · ${c.reagents} 种试剂`;
@@ -776,6 +778,13 @@ async function initQa() {
     const badge = $('#qaCoverage');
     if (badge) badge.textContent = '知识范围加载失败';
   }
+}
+
+function fillQaScope() {
+  const sel = $('#qaScope');
+  if (!sel || !qaState.protocols || sel.options.length > 1) return;
+  sel.innerHTML = '<option value="">全部实验</option>' +
+    qaState.protocols.map(p => `<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('');
 }
 
 function renderQaQuick() {
@@ -922,6 +931,17 @@ $('#qaInput').addEventListener('input', e => {
   e.target.style.height = 'auto';
   e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
 });
+$('#qaScope').addEventListener('change', e => {
+  const id = e.target.value;
+  qaState.context = { ...(qaState.context || {}), protocolId: id };
+  const name = id ? (qaState.protocols || []).find(p => p.id === id)?.name || '当前实验' : '全部实验';
+  const hint = $('#qaScopeHint');
+  if (hint) hint.textContent = id
+    ? `仅从《${name}》的步骤、质控指标与诊断规则中回答`
+    : '回答来自本地知识库检索，可点击来源跳到对应步骤';
+  toast(`问答范围：${name}`);
+});
+
 $('#qaClear').addEventListener('click', () => {
   qaState.messages = [qaWelcome()];
   qaState.context = null;

@@ -171,8 +171,11 @@
         </div>
         <div class="qa-toolbar">
           <div class="qa-toolbar-left">
+            <label class="qa-scope">问答范围
+              <select id="qaScope"><option value="">全部实验</option></select>
+            </label>
             <span class="qa-badge" id="qaCoverage">正在加载知识范围…</span>
-            <span class="qa-toolbar-hint">回答来自本地知识库检索，可点击来源跳到对应步骤</span>
+            <span class="qa-toolbar-hint" id="qaScopeHint">回答来自本地知识库检索，可点击来源跳到对应步骤</span>
           </div>
           <button class="link-btn" id="qaClear">清空对话</button>
         </div>

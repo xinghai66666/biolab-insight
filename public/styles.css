@@ -351,6 +351,12 @@ body{
 .qa-hero-stat .t{font-size:calc(11px * var(--fs));color:var(--muted);margin-top:2px;white-space:nowrap}
 .qa-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .qa-toolbar-left{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.qa-scope{display:flex;align-items:center;gap:6px;font-size:calc(11.5px * var(--fs));color:var(--muted);font-weight:600}
+.qa-scope select{
+  border:1px solid var(--line-strong);border-radius:7px;padding:5px 8px;
+  background:var(--surface);color:var(--text);font-family:inherit;font-size:calc(12px * var(--fs));max-width:230px;cursor:pointer;
+}
+.qa-scope select:focus{outline:none;border-color:var(--primary)}
 .qa-badge{font-size:calc(11px * var(--fs));color:var(--teal);background:var(--teal-soft);border-radius:5px;padding:3px 9px;font-weight:600}
 .qa-toolbar-hint{font-size:calc(11.5px * var(--fs));color:var(--muted)}
 .qa-thread{
