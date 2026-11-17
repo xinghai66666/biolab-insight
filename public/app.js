@@ -156,6 +156,96 @@ applyUi();
 
 const riskClass = k => ({ low: 'low', medium: 'medium', high: 'high', critical: 'critical' }[k] || 'low');
 
+/* ===== 通用自定义下拉：替代原生 select，避免系统弹层位置漂移 ===== */
+const pickers = new Map();
+
+function enhanceSelect(sel, opts = {}) {
+  if (!sel || pickers.has(sel)) return;
+  sel.classList.add('picker-native');
+  const wrap = document.createElement('div');
+  wrap.className = 'picker';
+  sel.parentNode.insertBefore(wrap, sel);
+  wrap.appendChild(sel);
+
+  const trigger = document.createElement('button');
+  trigger.type = 'button';
+  trigger.className = 'picker-trigger';
+  trigger.innerHTML = '<span class="picker-label"></span><span class="picker-caret">▾</span>';
+  const panel = document.createElement('div');
+  panel.className = 'picker-panel';
+  panel.hidden = true;
+  const withSearch = opts.search !== false;   // 始终提供搜索，选项增减都能用
+  panel.innerHTML = (withSearch ? '<input type="text" class="picker-search" placeholder="搜索…" maxlength="40">' : '') + '<div class="picker-list"></div>';
+  wrap.appendChild(trigger);
+  wrap.appendChild(panel);
+
+  const labelEl = trigger.querySelector('.picker-label');
+  const listEl = panel.querySelector('.picker-list');
+  const searchEl = panel.querySelector('.picker-search');
+
+  const itemHtml = o => `<button type="button" class="picker-item${o.value === sel.value ? ' active' : ''}" data-value="${esc(o.value)}">${esc(o.textContent)}</button>`;
+
+  function syncLabel() {
+    const opt = sel.options[sel.selectedIndex];
+    labelEl.textContent = opt ? opt.textContent : '请选择';
+    labelEl.classList.toggle('placeholder', !sel.value);
+    trigger.title = labelEl.textContent;
+  }
+  function renderList(filter = '') {
+    const kw = String(filter).trim().toLowerCase();
+    let html = '';
+    for (const node of sel.children) {
+      if (node.tagName === 'OPTGROUP') {
+        const items = [...node.children].filter(o => !kw || o.textContent.toLowerCase().includes(kw));
+        if (!items.length) continue;
+        html += `<div class="picker-group">${esc(node.label)}</div>` + items.map(itemHtml).join('');
+      } else if (node.tagName === 'OPTION') {
+        if (!kw || node.textContent.toLowerCase().includes(kw)) html += itemHtml(node);
+      }
+    }
+    listEl.innerHTML = html || '<div class="picker-empty">没有匹配项</div>';
+  }
+  function open() {
+    for (const [other, inst] of pickers) if (other !== sel) inst.close();
+    renderList();
+    panel.hidden = false;
+    if (searchEl) { searchEl.value = ''; searchEl.focus(); }
+  }
+  function close() { panel.hidden = true; }
+
+  trigger.addEventListener('click', e => {
+    e.stopPropagation();
+    panel.hidden ? open() : close();
+  });
+  if (searchEl) searchEl.addEventListener('input', e => renderList(e.target.value));
+  listEl.addEventListener('click', e => {
+    const item = e.target.closest('.picker-item');
+    if (!item) return;
+    sel.value = item.dataset.value;
+    syncLabel();
+    close();
+    sel.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+  document.addEventListener('click', e => { if (!panel.hidden && !wrap.contains(e.target)) close(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !panel.hidden) close(); });
+  new MutationObserver(() => { syncLabel(); if (!panel.hidden) renderList(); })
+    .observe(sel, { childList: true, subtree: true });
+
+  // 程序设置 value（两级联动、回填历史记录等）时同步标签
+  const proto = Object.getPrototypeOf(sel);
+  const desc = Object.getOwnPropertyDescriptor(proto, 'value');
+  if (desc && desc.set) {
+    Object.defineProperty(sel, 'value', {
+      configurable: true,
+      get() { return desc.get.call(sel); },
+      set(v) { desc.set.call(sel, v); syncLabel(); }
+    });
+  }
+
+  pickers.set(sel, { open, close, syncLabel, renderList });
+  syncLabel();
+}
+
 function groupedTypeOptions(types) {
   const groups = new Map();
   types.forEach(t => {
@@ -1052,6 +1142,8 @@ $('#qaClear').addEventListener('click', () => {
 (async function init() {
   try {
     document.querySelector('[name="date"]').value = new Date().toISOString().slice(0, 10);
+    // 统一替换原生下拉，避免弹层位置漂移
+    ['#fCategory', '#fType', '#filterType', '#qaScope', '#qaScopeInline'].forEach(id => enhanceSelect($(id)));
     await loadTypes();
     // 首页为实验问答；数据中心统计在后台预热，切换时无需等待
     switchView('qa');
