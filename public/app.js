@@ -794,6 +794,18 @@ function renderQaQuick() {
   box.innerHTML = qaState.quick.map(q => `<button class="qa-chip" type="button" data-ask="${esc(q)}">${esc(q)}</button>`).join('');
 }
 
+/** 列表项里的「建议」单独成行，避免长句挤成一段 */
+function qaListHtml(items) {
+  return (items || []).filter(Boolean).map(x => {
+    const text = String(x);
+    const m = text.match(/^(.*?)[\s；;|｜,，]+建议[：:]\s*(.*)$/s);
+    if (m) {
+      return `<li><span class="qa-list-main">${esc(m[1])}</span><span class="qa-list-advice">建议：${esc(m[2])}</span></li>`;
+    }
+    return `<li><span class="qa-list-main">${esc(text)}</span></li>`;
+  }).join('');
+}
+
 function qaBlockHtml(b) {
   if (!b) return '';
   if (b.type === 'lead') return `<div class="qa-headline">${esc(b.text)}</div>${b.sub ? `<div class="qa-lead-sub">${esc(b.sub)}</div>` : ''}`;
@@ -801,7 +813,7 @@ function qaBlockHtml(b) {
   if (b.type === 'list') {
     const items = (b.items || []).filter(Boolean);
     if (!items.length) return '';
-    return `<div class="qa-block"><div class="qa-block-title">${esc(b.title)}</div><ul class="qa-list">${items.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>`;
+    return `<div class="qa-block"><div class="qa-block-title">${esc(b.title)}</div><ul class="qa-list">${qaListHtml(items)}</ul></div>`;
   }
   if (b.type === 'cards') {
     const items = (b.items || []).filter(Boolean);
