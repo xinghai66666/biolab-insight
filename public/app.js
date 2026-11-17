@@ -769,6 +769,7 @@ async function renderProtocol(id, opts = {}) {
     setReagentData(protocol.reagents || []);
     const ov = protocol.overview;
     const ovRows = [
+      ['实验目的', ov.objective || '—', true],
       ['实验原理', ov.principle, true],
       ['适用场景', ov.application, true],
       ['起始材料', ov.input, false],
