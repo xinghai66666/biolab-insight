@@ -96,9 +96,11 @@ $('#sidebar').addEventListener('click', e => {
   setSidebarCollapsed(false);
 });
 // 点击正文空白区域收起侧边栏；点按钮、输入框、可交互卡片时不收起
-$('.main').addEventListener('click', e => {
-  if (e.target.closest('button, a, input, textarea, select, label, .kb-step, .qa-msg, .reagent-card')) return;
-  if (!appEl.classList.contains('collapsed')) setSidebarCollapsed(true);
+// 点击侧边栏以外的任意位置即收起；侧边栏内（含按钮）不收起
+document.addEventListener('click', e => {
+  if (appEl.classList.contains('collapsed')) return;
+  if (e.target.closest('#sidebar')) return;
+  setSidebarCollapsed(true);
 });
 
 setSidebarCollapsed(false);

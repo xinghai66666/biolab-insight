@@ -153,6 +153,23 @@ const OP_GROUPS = [
   }
 ];
 
+
+/* 每张图解卡片的一句话说明：这个操作在做什么 */
+const OP_DESC = {
+  pipetting: '用移液器把定量液体从一个容器转移到另一个容器，是配制体系与加样的基础动作。',
+  centrifugation: '通过离心力让细胞、沉淀与液体分层，完成分离、收集或换液。',
+  vortexing: '用涡旋振荡让样品快速混匀，常用于重悬、配制后混匀与瞬时离心前处理。',
+  pcr_setup: '在冰上按顺序混合 PCR 各组分，配成统一体系后分装到反应管。',
+  gel_loading: '把样品加入凝胶加样孔，为电泳按分子量分离做准备。',
+  aseptic: '在受控环境中完成操作，避免微生物污染样品、环境或操作者。',
+  nanodrop: '用微量分光光度法测定核酸或蛋白的浓度与纯度，只需 1–2 µL 样品。',
+  centrifuge_inst: '通过高速旋转产生离心力，完成沉淀、分层与上清收集。',
+  thermal_cycler: '按设定程序循环升降温度，驱动 PCR 的变性、退火与延伸。',
+  plate_reader: '读取微孔板各孔的吸光度或荧光信号，用于定量分析与质控判定。',
+  ph_meter: '测量溶液酸碱度，校准与温度补偿直接决定读数是否可靠。',
+  balance: '称量试剂与样品的质量，是配制溶液、投料与记录的基础。'
+};
+
 function renderOperations() {
   const box = document.getElementById('operationsContent');
   if (!box || box.dataset.ready) return;
@@ -165,6 +182,7 @@ function renderOperations() {
           <article class="op-card">
             <div class="op-figure">${OP_ICONS[item.icon] || ''}<span>${esc(item.name)}</span></div>
             <div class="op-card-body">
+              <p class="op-desc">${esc(OP_DESC[item.id] || '')}</p>
               <ul>${item.points.map(p => `<li>${esc(p)}</li>`).join('')}</ul>
               <div class="op-tip"><strong>提示</strong>${esc(item.tip)}</div>
             </div>
