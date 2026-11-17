@@ -333,7 +333,6 @@ body{
 .picker{position:relative;display:inline-block;min-width:0}
 .picker-native{display:none !important}
 .field .picker{display:block;width:100%}
-.qa-composer .picker{width:300px;flex-shrink:0}
 .qa-toolbar-left .picker{width:auto}
 .picker-trigger{
   width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;
@@ -576,13 +575,6 @@ body.op-modal-open{overflow:hidden}
 .qa-quick::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:2px}
 .qa-quick .qa-chip{white-space:nowrap;flex-shrink:0}
 .qa-quick-empty{font-size:calc(11.5px * var(--fs));color:var(--faint)}
-.qa-composer select{
-  align-self:flex-end;max-width:190px;flex-shrink:0;
-  border:1px solid var(--line-strong);border-radius:8px;padding:9px 10px;
-  background:var(--surface);color:var(--text);font-family:inherit;font-size:calc(12.5px * var(--fs));cursor:pointer;
-}
-.qa-composer select:focus{outline:none;border-color:var(--primary)}
-@media(max-width:900px){.qa-composer select{max-width:120px}}
 .qa-composer{display:flex;gap:10px;align-items:flex-end;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:10px 12px;box-shadow:var(--shadow)}
 .qa-composer textarea{
   flex:1;border:0;outline:none;resize:none;font-family:inherit;font-size:calc(13.5px * var(--fs));line-height:1.6;

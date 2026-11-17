@@ -953,7 +953,7 @@ function fillQaScope() {
   if (!qaState.protocols) return;
   const options = '<option value="">全部实验</option>' +
     qaState.protocols.map(p => `<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('');
-  for (const id of ['#qaScope', '#qaScopeInline']) {
+  for (const id of ['#qaScope']) {
     const sel = $(id);
     if (sel && sel.options.length <= 1) sel.innerHTML = options;
   }
@@ -962,7 +962,7 @@ function fillQaScope() {
 /** 两处范围选择共用一份状态，保持同步 */
 function setQaScope(id, notify = true) {
   qaState.context = { ...(qaState.context || {}), protocolId: id };
-  for (const selId of ['#qaScope', '#qaScopeInline']) {
+  for (const selId of ['#qaScope']) {
     const el = $(selId);
     if (el && el.value !== id) el.value = id;
   }
@@ -1136,7 +1136,6 @@ $('#qaInput').addEventListener('input', e => {
   e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
 });
 $('#qaScope').addEventListener('change', e => setQaScope(e.target.value));
-$('#qaScopeInline').addEventListener('change', e => setQaScope(e.target.value));
 
 $('#qaClear').addEventListener('click', () => {
   qaState.messages = [qaWelcome()];
@@ -1148,7 +1147,7 @@ $('#qaClear').addEventListener('click', () => {
   try {
     document.querySelector('[name="date"]').value = new Date().toISOString().slice(0, 10);
     // 统一替换原生下拉，避免弹层位置漂移
-    ['#fCategory', '#fType', '#filterType', '#qaScope', '#qaScopeInline'].forEach(id => enhanceSelect($(id)));
+    ['#fCategory', '#fType', '#filterType', '#qaScope'].forEach(id => enhanceSelect($(id)));
     await loadTypes();
     // 首页为实验问答；数据中心统计在后台预热，切换时无需等待
     switchView('qa');
