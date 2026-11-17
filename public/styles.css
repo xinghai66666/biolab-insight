@@ -68,12 +68,12 @@ body{
 .sidebar-expand{display:none}
 .app.collapsed .sidebar-expand{
   display:flex;align-items:center;justify-content:center;
-  width:36px;height:36px;margin:2px auto 8px;flex-shrink:0;
-  border:1px solid var(--line);border-radius:10px;background:var(--surface);
-  color:var(--muted);font-size:calc(16px * var(--fs));line-height:1;cursor:pointer;
+  width:40px;height:40px;margin:4px auto 10px;flex-shrink:0;
+  border:1px solid var(--primary);border-radius:11px;background:var(--primary-soft);
+  color:var(--primary);font-size:calc(20px * var(--fs));font-weight:700;line-height:1;cursor:pointer;
   font-family:inherit;transition:.15s;
 }
-.app.collapsed .sidebar-expand:hover{color:var(--primary);border-color:var(--primary);background:var(--primary-soft)}
+.app.collapsed .sidebar-expand:hover{background:var(--primary);color:#fff}
 .app.collapsed .sidebar{cursor:pointer}
 .app.collapsed .nav-item{cursor:pointer}
 .app.collapsed .nav{padding:10px 9px;gap:6px}

@@ -47,7 +47,11 @@ function switchView(view) {
   if (!prevActive || prevActive.id !== 'view-' + view) window.scrollTo(0, 0);
 }
 
-$$('.nav-item').forEach(b => b.addEventListener('click', () => switchView(b.dataset.view)));
+$$('.nav-item').forEach(b => b.addEventListener('click', () => {
+  // 折叠状态下点任一导航图标即展开侧边栏，避免找不到展开入口
+  if (appEl.classList.contains('collapsed')) setSidebarCollapsed(false);
+  switchView(b.dataset.view);
+}));
 
 /* ===== 侧边栏：横向收起 / 展开 ===== */
 const appEl = $('#app');
