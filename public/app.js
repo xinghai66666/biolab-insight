@@ -58,7 +58,11 @@ $$('.nav-item').forEach(b => {
   b.appendChild(short);
 });
 
-$$('.nav-item').forEach(b => b.addEventListener('click', () => switchView(b.dataset.view)));
+$$('.nav-item').forEach(b => b.addEventListener('click', () => {
+  // 折叠态点侧边栏内的图标：先展开侧边栏，再切换视图
+  if (appEl.classList.contains('collapsed')) setSidebarCollapsed(false);
+  switchView(b.dataset.view);
+}));
 
 /* ===== 侧边栏：横向收起 / 展开 ===== */
 const appEl = $('#app');
