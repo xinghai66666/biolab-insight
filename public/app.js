@@ -58,11 +58,7 @@ $$('.nav-item').forEach(b => {
   b.appendChild(short);
 });
 
-$$('.nav-item').forEach(b => b.addEventListener('click', () => {
-  // 折叠状态下点任一导航图标即展开侧边栏，避免找不到展开入口
-  if (appEl.classList.contains('collapsed')) setSidebarCollapsed(false);
-  switchView(b.dataset.view);
-}));
+$$('.nav-item').forEach(b => b.addEventListener('click', () => switchView(b.dataset.view)));
 
 /* ===== 侧边栏：横向收起 / 展开 ===== */
 const appEl = $('#app');
@@ -84,15 +80,10 @@ sidebarToggle.addEventListener('keydown', e => {
     setSidebarCollapsed(!appEl.classList.contains('collapsed'));
   }
 });
-// 折叠态：显式展开按钮 + 点击侧边栏空白区域均可展开
+// 折叠态：只通过展开图标（»）或品牌图标展开，点导航项仅切换视图
 const sidebarExpand = $('#sidebarExpand');
 sidebarExpand.addEventListener('click', e => {
   e.stopPropagation();
-  setSidebarCollapsed(false);
-});
-$('#sidebar').addEventListener('click', e => {
-  if (!appEl.classList.contains('collapsed')) return;
-  if (e.target.closest('.nav-item, #sidebarToggle, #sidebarExpand')) return;
   setSidebarCollapsed(false);
 });
 // 点击正文空白区域收起侧边栏；点按钮、输入框、可交互卡片时不收起

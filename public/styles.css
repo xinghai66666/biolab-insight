@@ -77,8 +77,6 @@ body{
   font-family:inherit;transition:.15s;
 }
 .app.collapsed .sidebar-expand:hover{background:var(--primary);color:#fff}
-.app.collapsed .sidebar{cursor:pointer}
-.app.collapsed .nav-item{cursor:pointer}
 .app.collapsed .nav{padding:8px 8px;gap:3px}
 .app.collapsed .nav-item{justify-content:flex-start;padding:9px 9px;gap:9px}
 .app.collapsed .nav-label{display:none}
