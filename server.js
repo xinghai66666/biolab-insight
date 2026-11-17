@@ -59,11 +59,20 @@ function serveStatic(req, res, pathname) {
   if (!full.startsWith(PUBLIC_DIR)) return send(res, 403, { error: 'Forbidden' });
   fs.readFile(full, (err, data) => {
     if (err) {
-      if (pathname === '/') {
-        return send(res, 200, '<h1>BioLab Insight</h1><p>前端文件缺失，请检查 public 目录。</p>', 'text/html; charset=utf-8');
-      }
+      // 浏览器默认会请求 /favicon.ico，直接回落到 png 图标，避免 404
+      if (pathname === '/favicon.ico') return serveFile(res, path.join(PUBLIC_DIR, 'favicon.png'));
+      // 无扩展名的路径（路由式地址、反向代理拼接出的路径）回落到首页，
+      // 否则分享域名/预览面板访问时会直接看到 Not found
+      if (!path.extname(pathname)) return serveFile(res, path.join(PUBLIC_DIR, 'index.html'));
       return send(res, 404, { error: 'Not found' });
     }
+    send(res, 200, data, MIME[path.extname(full).toLowerCase()] || 'application/octet-stream');
+  });
+}
+
+function serveFile(res, full) {
+  fs.readFile(full, (err, data) => {
+    if (err) return send(res, 404, { error: 'Not found' });
     send(res, 200, data, MIME[path.extname(full).toLowerCase()] || 'application/octet-stream');
   });
 }

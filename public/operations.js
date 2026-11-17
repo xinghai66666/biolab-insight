@@ -1,7 +1,23 @@
 'use strict';
 
 /* 实验操作库：基本实验操作与常用仪器的图解卡片。
-   配图使用内联 SVG 示意图，随主题变量变色，不依赖外部图片资源。 */
+   卡片配图为实验室实拍风格的仪器/操作照片（public/images/op-*.jpg），
+   OP_ICONS 内的 SVG 仅作为图片缺失时的兜底占位。 */
+
+const OP_IMAGES = {
+  pipetting: 'images/op-pipetting.jpg',
+  centrifugation: 'images/op-centrifuge.jpg',
+  vortexing: 'images/op-vortex.jpg',
+  pcr_setup: 'images/op-pcr-setup.jpg',
+  gel_loading: 'images/op-gel-loading.jpg',
+  aseptic: 'images/op-aseptic.jpg',
+  nanodrop: 'images/op-nanodrop.jpg',
+  centrifuge_inst: 'images/op-centrifuge.jpg',
+  thermal_cycler: 'images/op-thermal-cycler.jpg',
+  plate_reader: 'images/op-plate-reader.jpg',
+  ph_meter: 'images/op-ph-meter.jpg',
+  balance: 'images/op-balance.jpg'
+};
 
 const OP_ICONS = {
   pipette: `<svg viewBox="0 0 96 64" aria-hidden="true"><path d="M30 10h30v16H30z"/><path d="M36 26h18v8H36z"/><path d="M40 34h10l-2 14h-6z"/><path d="M45 48v6"/><path d="M60 14h8v8h-8"/><path d="M45 56v4"/><path d="M22 18h8M22 24h8"/></svg>`,
@@ -197,7 +213,12 @@ function renderOperations() {
       <div class="op-grid">
         ${group.items.map(item => `
           <article class="op-card" data-op="${esc(item.id)}" tabindex="0" role="button" aria-label="查看${esc(item.name)}操作图解">
-            <div class="op-figure">${OP_ICONS[item.icon] || ''}<span>${esc(item.name)}</span><em class="op-figure-more">查看图解 →</em></div>
+            <div class="op-figure">
+              ${OP_IMAGES[item.id]
+                ? `<img src="${OP_IMAGES[item.id]}" alt="${esc(item.name)}实拍图" loading="lazy">`
+                : (OP_ICONS[item.icon] || '')}
+              <span>${esc(item.name)}</span><em class="op-figure-more">查看图解 →</em>
+            </div>
             <div class="op-card-body">
               <p class="op-desc">${esc(OP_DESC[item.id] || '')}</p>
               <ul>${item.points.map(p => `<li>${esc(p)}</li>`).join('')}</ul>
@@ -215,7 +236,12 @@ function opDetailHtml(item) {
     `<div class="op-flow-step"><span class="op-flow-no">${i + 1}</span><span class="op-flow-text">${esc(step)}</span></div>`).join('');
   return `<div class="op-modal-card" role="dialog" aria-modal="true" aria-label="${esc(item.name)}操作图解">
       <button type="button" class="op-modal-close" data-op-close aria-label="关闭">×</button>
-      <div class="op-modal-figure">${OP_ICONS[item.icon] || ''}<div class="op-modal-name">${esc(item.name)}</div></div>
+      <div class="op-modal-figure">
+        ${OP_IMAGES[item.id]
+          ? `<img src="${OP_IMAGES[item.id]}" alt="${esc(item.name)}实拍图">`
+          : (OP_ICONS[item.icon] || '')}
+        <div class="op-modal-name">${esc(item.name)}</div>
+      </div>
       <div class="op-modal-body">
         <p class="op-modal-desc">${esc(OP_DESC[item.id] || '')}</p>
         <div class="op-flow-label">操作流程</div>

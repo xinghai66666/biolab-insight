@@ -38,15 +38,15 @@
 
 ## 硬性要求
 
-1. `id` 全局唯一，小写下划线命名，不要与现有 21 类重复（见下方已有 id 列表）。
+1. `id` 全局唯一，小写下划线命名，不要与现有 71 类重复（下方列出 21 个手写类的 id，另外 50 类由 `lib/knowledge-base-extra.js` 承接）。
 2. `st` 必须正好 8 步，每步 6 个元素齐全；操作要点要具体到可照做，参数要有真实量级（温度、时间、pH、浓度、转速、流速等）。
 3. `m` 的 key 在本实验内唯一，使用英文驼峰；阈值须为通用参考值且符合行业常识，不要设置过窄区间；只在有共识的指标上设严重线。
 4. `r` 的 metric 必须能在 `m` 中找到；`combo` 类型请写 `combo` 并在 metric 位置写 `指标A+指标B`，生成器会转成组合条件（两个条件均为 low/high，按指标定义方向）。
-5. `g` 中试剂名称不要与已有 74 种重复（尤其 PBS、TMB、鲎试剂、无水乙醇、滤膜、Tris 中和缓冲液等）。
+5. `g` 中试剂名称不要与已有 169 种重复（尤其 PBS、TMB、鲎试剂、无水乙醇、滤膜、Tris 中和缓冲液等）。
 6. 内容必须是公开药典 / 行业通用 SOP 层面的知识，用于演示与培训；不要写任何真实产品的注册工艺参数或企业专有配方。
 7. 字符串内如需引号请用中文引号或转义，不要破坏 JS 语法。
 
-## 已有 21 类 id（不要重复）
+## 手写类 21 个 id（不要重复）
 
 cell_culture, protein_purification, qpcr, western_blot, elisa, sterility, plasmid_prep, cell_cryo, mycoplasma, sds_page, dna_gel, transformation, endotoxin, protein_a_chrom, sec_hplc, hcp_elisa, microbial_limit, ce_sds, uf_diafiltration, environmental_monitoring, endotoxin_kinetic
 

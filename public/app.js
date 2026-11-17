@@ -59,19 +59,24 @@ $$('.nav-item').forEach(b => {
 });
 
 $$('.nav-item').forEach(b => b.addEventListener('click', () => {
-  // 折叠态点侧边栏内的图标：先展开侧边栏，再切换视图
+  // 折叠态点侧边栏内的图标：展开侧边栏（同时出现遮罩），再切换视图
   if (appEl.classList.contains('collapsed')) setSidebarCollapsed(false);
   switchView(b.dataset.view);
 }));
 
-/* ===== 侧边栏：横向收起 / 展开 ===== */
+/* ===== 侧边栏：收起 / 展开 =====
+   - 展开时正文区域同时覆盖一层遮罩，点遮罩即收起；
+   - 只有折叠态下点导航图标才会展开，点正文不会展开；
+   - 首屏为收起状态，避免一进来正文就被遮罩压暗。 */
 const appEl = $('#app');
 const sidebarToggle = $('#sidebarToggle');
+const sidebarMask = $('#sidebarMask');
 
 function setSidebarCollapsed(collapsed) {
-  appEl.classList.toggle('collapsed', !!collapsed);
-  sidebarToggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
-  sidebarToggle.title = collapsed ? '点击展开侧边栏' : '点击收起侧边栏';
+  const isCollapsed = !!collapsed;
+  appEl.classList.toggle('collapsed', isCollapsed);
+  sidebarMask.hidden = isCollapsed;
+  sidebarToggle.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
 }
 
 sidebarToggle.addEventListener('click', e => {
@@ -84,22 +89,10 @@ sidebarToggle.addEventListener('keydown', e => {
     setSidebarCollapsed(!appEl.classList.contains('collapsed'));
   }
 });
-// 折叠态：只通过展开图标（»）或品牌图标展开，点导航项仅切换视图
-const sidebarExpand = $('#sidebarExpand');
-sidebarExpand.addEventListener('click', e => {
-  e.stopPropagation();
-  setSidebarCollapsed(false);
-});
-// 点击正文空白区域收起侧边栏；点按钮、输入框、可交互卡片时不收起
-// 点击侧边栏以外的任意位置即收起；侧边栏内（含按钮）不收起
-document.addEventListener('click', e => {
-  if (appEl.classList.contains('collapsed')) return;
-  if (e.target.closest('#sidebar')) return;
-  if (document.body.classList.contains('op-modal-open')) return;   // 弹窗内操作不收起侧边栏
-  setSidebarCollapsed(true);
-});
+// 点遮罩收起侧边栏
+sidebarMask.addEventListener('click', () => setSidebarCollapsed(true));
 
-setSidebarCollapsed(false);
+setSidebarCollapsed(true);
 
 /* ===== 外观设置：字号 / 背景颜色 / 夜间模式 ===== */
 const UI_DEFAULTS = { theme: 'light', bg: 'default', fs: 'md' };

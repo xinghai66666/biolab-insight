@@ -8,3 +8,5 @@ data/experiments.json
 data/*.tmp.*
 *.log
 .DS_Store
+.tmp-commons/
+tmp-check-*.js
