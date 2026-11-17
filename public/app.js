@@ -877,7 +877,15 @@ $('#kbCollapseAll').addEventListener('click', () => {
 $('#kbTogglePitfalls').addEventListener('click', e => {
   kbPitfallsHidden = !kbPitfallsHidden;
   applyPitfallVisibility();
-  e.target.textContent = kbPitfallsHidden ? '显示易错点' : '隐藏易错点';
+  const btn = e.currentTarget;
+  btn.textContent = kbPitfallsHidden ? '显示易错点' : '隐藏易错点';
+  btn.classList.toggle('active', kbPitfallsHidden);
+  btn.setAttribute('aria-pressed', kbPitfallsHidden ? 'true' : 'false');
+  // 易错点在步骤展开后才可见，这里用提示条说明当前状态与数量
+  const total = document.querySelectorAll('#kbContent .kb-pitfall').length;
+  toast(kbPitfallsHidden
+    ? `已隐藏全部易错点（${total} 处），展开步骤后也不再显示`
+    : `已显示全部易错点（${total} 处）`);
 });
 
 /* ===== 实验问答 ===== */
