@@ -58,39 +58,51 @@ $$('.nav-item').forEach(b => {
   b.appendChild(short);
 });
 
-$$('.nav-item').forEach(b => b.addEventListener('click', () => {
-  // 折叠态点侧边栏内的图标：展开侧边栏（同时出现遮罩），再切换视图
-  if (appEl.classList.contains('collapsed')) setSidebarCollapsed(false);
-  switchView(b.dataset.view);
-}));
-
 /* ===== 侧边栏：收起 / 展开 =====
-   - 展开时正文区域同时覆盖一层遮罩，点遮罩即收起；
-   - 只有折叠态下点导航图标才会展开，点正文不会展开；
-   - 首屏为收起状态，避免一进来正文就被遮罩压暗。 */
+   - 宽屏：首屏收起；点导航图标或品牌区展开（同时出现遮罩），点遮罩收起；点正文不展开。
+   - 半屏/手机（≤900px）：侧边栏固定为窄图标栏，始终收起，点导航只切视图；
+     遮罩永不出现，正文不会被压暗。 */
 const appEl = $('#app');
 const sidebarToggle = $('#sidebarToggle');
 const sidebarMask = $('#sidebarMask');
+const COMPACT_QUERY = window.matchMedia('(max-width:900px)');
+const isCompact = () => COMPACT_QUERY.matches;
 
 function setSidebarCollapsed(collapsed) {
-  const isCollapsed = !!collapsed;
+  const isCollapsed = isCompact() ? true : !!collapsed;   // 小屏强制收起
   appEl.classList.toggle('collapsed', isCollapsed);
-  sidebarMask.hidden = isCollapsed;
+  sidebarMask.hidden = isCollapsed || isCompact();        // 小屏绝不显示遮罩
   sidebarToggle.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
 }
 
+$$('.nav-item').forEach(b => b.addEventListener('click', () => {
+  // 宽屏折叠态下点导航图标才展开；小屏下仅切换视图，不展开、不弹遮罩
+  if (!isCompact() && appEl.classList.contains('collapsed')) setSidebarCollapsed(false);
+  switchView(b.dataset.view);
+}));
+
 sidebarToggle.addEventListener('click', e => {
   e.stopPropagation();
+  if (isCompact()) return;                                 // 小屏点品牌区不触发展开
   setSidebarCollapsed(!appEl.classList.contains('collapsed'));
 });
 sidebarToggle.addEventListener('keydown', e => {
   if (e.key === 'Enter' || e.key === ' ') {
     e.preventDefault();
+    if (isCompact()) return;
     setSidebarCollapsed(!appEl.classList.contains('collapsed'));
   }
 });
 // 点遮罩收起侧边栏
 sidebarMask.addEventListener('click', () => setSidebarCollapsed(true));
+
+// 窗口尺寸跨越小屏阈值时，自动收起并隐藏遮罩
+function onViewportChange() {
+  if (isCompact()) setSidebarCollapsed(true);
+  else sidebarMask.hidden = appEl.classList.contains('collapsed');
+}
+if (COMPACT_QUERY.addEventListener) COMPACT_QUERY.addEventListener('change', onViewportChange);
+else COMPACT_QUERY.addListener(onViewportChange);
 
 setSidebarCollapsed(true);
 

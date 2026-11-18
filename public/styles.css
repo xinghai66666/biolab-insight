@@ -223,8 +223,12 @@ body{
 .tag{display:inline-block;background:var(--bg);border:1px solid var(--line);border-radius:5px;padding:1px 7px;font-size:calc(11px * var(--fs));color:var(--muted);margin:0 4px 4px 0}
 @media(max-width:900px){
   .app{--sb-expanded:64px}
-  .sidebar{width:64px}.brand-name,.brand-sub,.nav-item span:not(.nav-ico),.sidebar-foot{display:none}
-  .nav-item{justify-content:center}.main{padding:0 16px 40px}.stat-grid{grid-template-columns:repeat(2,1fr)}
+  /* 半屏/手机：侧边栏固定为窄图标栏，始终收起；遮罩永不出现，正文不会被压暗 */
+  .app .sidebar,.app.collapsed .sidebar{width:64px}
+  .sidebar-mask{display:none !important}
+  .brand-name,.brand-sub,.nav-item span:not(.nav-ico),.sidebar-foot,.nav-short,.brand-short{display:none}
+  .app.collapsed .nav-short,.app.collapsed .brand-short{display:none}  /* 覆盖收起态的短名，手机只留图标 */
+  .nav-item{justify-content:center;padding:11px 0}.main{padding:0 16px 40px}.stat-grid{grid-template-columns:repeat(2,1fr)}
   .form-grid,.metric-grid,.report-grid,.cols{grid-template-columns:1fr}
 }
 
