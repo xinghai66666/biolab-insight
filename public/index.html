@@ -179,9 +179,9 @@
             </div>
           </div>
           <div class="qa-hero-stats">
-            <div class="qa-hero-stat"><div class="n" id="qaStatProtocols">71</div><div class="t">个实验 SOP</div></div>
-            <div class="qa-hero-stat"><div class="n" id="qaStatSteps">555</div><div class="t">个操作步骤</div></div>
-            <div class="qa-hero-stat"><div class="n" id="qaStatReagents">169</div><div class="t">种试剂词条</div></div>
+            <div class="qa-hero-stat"><div class="n" id="qaStatProtocols">87</div><div class="t">个实验 SOP</div></div>
+            <div class="qa-hero-stat"><div class="n" id="qaStatSteps">683</div><div class="t">个操作步骤</div></div>
+            <div class="qa-hero-stat"><div class="n" id="qaStatReagents">195</div><div class="t">种试剂词条</div></div>
           </div>
         </div>
         <div class="qa-toolbar">
@@ -258,18 +258,18 @@
         <p>面向生物制药实验室的 AI 智能体原型：对实验数据进行结构化总结，并针对不同实验结果定位可能的问题所在，给出按可能性排序的排查建议。</p>
         <h3>核心能力</h3>
         <ul>
-          <li>覆盖 71 类实验、按 6 个类别分组：细胞培养/冻存复苏/转染/发酵；蛋白纯化/Protein A-G 层析/超滤换液/病毒灭活；SDS-PAGE/WB/等电聚焦/qPCR/RT-qPCR/ELISA/SEC-HPLC/CE-SDS/HPLC-MS；质粒制备/DNA-RNA 提取/酶切连接/菌落 PCR；无菌/内毒素/微生物限度/环境监测/理化检测</li>
+          <li>覆盖 87 类实验、按 6 个类别分组（含培养基配制、补料分批培养、收获液澄清、除病毒纳滤、脱盐换液、残留 DNA/Protein A、细胞学效价、渗透压、cIEF、琼脂糖电泳、CRISPR、DSC、SPR、水系统与促生长试验）：细胞培养/冻存复苏/转染/发酵；蛋白纯化/Protein A-G 层析/超滤换液/病毒灭活；SDS-PAGE/WB/等电聚焦/qPCR/RT-qPCR/ELISA/SEC-HPLC/CE-SDS/HPLC-MS；质粒制备/DNA-RNA 提取/酶切连接/菌落 PCR；无菌/内毒素/微生物限度/环境监测/理化检测</li>
           <li>异常检测：指标越界、对照失效、重复孔 CV 过高、历史趋势漂移、组合异常</li>
           <li>问题定位：证据 + 可能性评分 + 严重程度 + 原因假设 + 排查建议</li>
           <li>健康度评分与四级预警，历史批次对比</li>
-          <li>实验知识库：71 个实验、555 个步骤，支持详细步骤折叠、试剂知识卡与 NanoDrop 读数解读；实验选择器支持按名称搜索与分类浏览</li>
+          <li>实验知识库：87 个实验、683 个步骤，支持详细步骤折叠、试剂知识卡与 NanoDrop 读数解读；实验选择器支持按名称搜索与分类浏览</li>
           <li>实验操作库：12 张操作卡片，配图采用 Wikimedia Commons 的真实仪器与操作照片（移液加样、离心、涡旋、PCR 配液、电泳、无菌操作、NanoDrop、离心机、PCR 仪、酶标仪、pH 计、电子天平）；点击卡片可展开操作图解与分步流程</li>
           <li>实验问答（系统首页）：自然语言提问，可在对话框上方按实验限定回答范围，回答标注来源并可跳转到对应步骤核对</li>
           <li>实验数据与记录：服务端持久化，健康度评分与四级预警，支持同类型历史批次趋势对比、报告打印／导出与记录删除</li>
           <li>导航与外观：侧边栏收起为窄栏（图标 + 短名），点导航图标展开、展开时正文覆盖遮罩、点遮罩收起；电脑半屏与手机下固定为窄图标栏、不展开也不弹遮罩；字号四档、五种背景颜色、夜间模式与跟随系统，偏好不写入浏览器存储</li>
         </ul>
         <h3>数据与架构</h3>
-        <p>后端采用 Node.js 原生模块构建 REST API，全部业务数据保存在服务端数据文件中（原子写入），浏览器端不保存任何业务数据。分析引擎为「领域知识库 + 证据加权推理」，规则可插拔扩展；实验问答为本地检索式实现，索引 71 个 SOP、555 个步骤、169 种试剂词条与 71 类实验的诊断规则，不联网、不调用外部大模型，回答均标注知识来源。</p>
+        <p>后端采用 Node.js 原生模块构建 REST API，全部业务数据保存在服务端数据文件中（原子写入），浏览器端不保存任何业务数据。分析引擎为「领域知识库 + 证据加权推理」，规则可插拔扩展；实验问答为本地检索式实现，索引 87 个 SOP、683 个步骤、195 种试剂词条与 87 类实验的诊断规则，不联网、不调用外部大模型，回答均标注知识来源。</p>
         <p class="disclaimer">本工具为研发与 QC 的辅助决策支持，不替代 GMP 放行判定、药典规定的检验结论或专业人员的判断。</p>
         <p class="muted">实验操作库配图取自 Wikimedia Commons（CC 授权），仅做裁切与压缩，逐图来源与许可见 <code>public/images/CREDITS.md</code>。</p>
         <p class="muted">版本 1.1 · 2026-11 · 首届 OPC 创新应用挑战赛 · AiCoding 硬核组 · AI 智能体方向</p>

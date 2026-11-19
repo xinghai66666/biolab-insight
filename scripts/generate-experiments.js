@@ -14,7 +14,9 @@ const RECIPE_FILES = [
   'recipes-downstream.js',
   'recipes-analytical.js',
   'recipes-molecular.js',
-  'recipes-micro-qc.js'
+  'recipes-micro-qc.js',
+  'recipes-supplement-a.js',
+  'recipes-supplement-b.js'
 ];
 
 const recipes = [];
@@ -29,7 +31,16 @@ for (const f of RECIPE_FILES) {
 const KB = require(path.join(ROOT, 'lib', 'knowledge-base.js'));
 const { PROTOCOLS } = require(path.join(ROOT, 'lib', 'protocol-knowledge.js'));
 const { REAGENTS } = require(path.join(ROOT, 'lib', 'reagent-glossary.js'));
-const usedTypeIds = new Set(Object.keys(KB.EXPERIMENT_TYPES));
+// 由本脚本生成过的类型不算冲突（否则无法重复执行）
+let generatedTypeIds = new Set();
+try {
+  generatedTypeIds = new Set(Object.keys(require(path.join(ROOT, 'lib', 'knowledge-base-extra.js')).EXPERIMENT_EXTRA));
+} catch (e) { /* 首次生成时还没有扩展文件 */ }
+let generatedReagentIds = new Set();
+try {
+  generatedReagentIds = new Set(require(path.join(ROOT, 'lib', 'reagent-glossary-extra.js')).map(x => x.id));
+} catch (e) { /* 首次生成时还没有扩展文件 */ }
+const usedTypeIds = new Set(Object.keys(KB.EXPERIMENT_TYPES).filter(id => !generatedTypeIds.has(id)));
 const usedProtocolIds = new Set(PROTOCOLS.map(p => p.id));
 const usedReagentIds = new Set();   // 已有词条允许复用，这里只检查配方之间的重复
 const seen = new Set();
@@ -91,7 +102,7 @@ function genProtocol(r) {
       title: ${q(title)},
       purpose: ${q(why)},
       summary: ${q(summary)},
-      detail: ${q(summary + '。具体按本实验室 SOP 与设备说明书执行，记录实际条件与偏差。')},
+      detail: ${q(String(summary).replace(/[。；;，,\s]+$/, '') + '。具体按本实验室 SOP 与设备说明书执行，记录实际条件与偏差。')},
       substeps: [
 ${subArr},
         '记录本步起止时间、实际参数与操作人，留样并标记'
@@ -220,8 +231,8 @@ const reagentLines = [];
 for (const r of recipes) {
   for (const g of r.g || []) {
     const [id, name, aliases, category, fn, composition, notes, storage] = g;
-    // 已有词条（如 BCA 试剂盒、DTT）继续复用，不重复生成
-    if (REAGENTS.some(x => x.id === id)) continue;
+    // 手写词条（如 BCA 试剂盒、DTT）继续复用；上一轮由本脚本生成的词条需重新生成
+    if (REAGENTS.some(x => x.id === id) && !generatedReagentIds.has(id)) continue;
     reagentLines.push(`  {\n    id: ${q(id)},\n    name: ${q(name)},\n    aliases: [${list(String(aliases).split(/[,，]/).map(x => x.trim()).filter(Boolean))}],\n    category: ${q(category)},\n    function: ${q(fn)},\n    composition: ${q(composition)},\n    notes: ${q(notes)},\n    storage: ${q(storage)}\n  }`);
   }
 }
