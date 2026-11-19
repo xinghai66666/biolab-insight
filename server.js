@@ -77,6 +77,26 @@ function serveFile(res, full) {
   });
 }
 
+/** 校验实验指标：数值型不得为负、不得为 NaN/Infinity；返回错误文案或 null */
+function validateMetrics(type, metrics) {
+  const def = KB.getExperimentType(type);
+  if (!def) return '无效的实验类型';
+  if (!metrics || typeof metrics !== 'object') return null;
+  for (const m of def.metrics) {
+    if (m.type === 'enum') continue;
+    if (!(m.key in metrics)) continue;
+    const raw = metrics[m.key];
+    const arr = Array.isArray(raw) ? raw : [raw];
+    if (!arr.length) continue;
+    for (const v of arr) {
+      const n = Number(v);
+      if (!Number.isFinite(n)) return `${m.label} 不是有效数值`;
+      if (n < 0) return `${m.label} 不能为负数（当前 ${n}）`;
+    }
+  }
+  return null;
+}
+
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://localhost');
   const p = url.pathname;
@@ -126,6 +146,11 @@ const server = http.createServer(async (req, res) => {
       if (!body.type || !KB.getExperimentType(body.type)) {
         return send(res, 400, { error: '无效的实验类型' });
       }
+      if (!String(body.title || '').trim()) {
+        return send(res, 400, { error: '请填写实验标题' });
+      }
+      const metricErr = validateMetrics(body.type, body.metrics);
+      if (metricErr) return send(res, 400, { error: metricErr });
       const analysis = analyzer.analyze(body, store.history(body.type, null));
       const rec = store.create({ ...body, analysis });
       return send(res, 201, { record: rec, analysis });
@@ -149,6 +174,8 @@ const server = http.createServer(async (req, res) => {
       if (!body.type || !KB.getExperimentType(body.type)) {
         return send(res, 400, { error: '无效的实验类型' });
       }
+      const metricErr = validateMetrics(body.type, body.metrics);
+      if (metricErr) return send(res, 400, { error: metricErr });
       const history = store.history(body.type, body.excludeId || null);
       const analysis = analyzer.analyze(body, history);
       return send(res, 200, { analysis });

@@ -407,15 +407,21 @@ function collectForm() {
   const type = fd.get('type');
   const t = state.types.find(x => x.id === type);
   const metrics = {};
+  const errors = [];
   if (t) {
     for (const m of t.metrics) {
       const raw = String(fd.get('m_' + m.key) || '').trim();
       if (!raw) continue;
-      if (m.type === 'enum') { metrics[m.key] = raw; }
-      else {
-        const nums = raw.split(/[,，\s]+/).map(Number).filter(n => isFinite(n));
-        if (nums.length) metrics[m.key] = nums.length === 1 ? [nums[0]] : nums;
+      if (m.type === 'enum') { metrics[m.key] = raw; continue; }
+      const parts = raw.split(/[,，\s]+/).filter(Boolean);
+      const nums = [];
+      for (const part of parts) {
+        const n = Number(part);
+        if (!Number.isFinite(n)) { errors.push(`${m.label} 含非数字内容「${part}」`); continue; }
+        if (n < 0) { errors.push(`${m.label} 不能为负数`); continue; }
+        nums.push(n);
       }
+      if (nums.length) metrics[m.key] = nums.length === 1 ? [nums[0]] : nums;
     }
   }
   return {
@@ -426,17 +432,20 @@ function collectForm() {
     operator: String(fd.get('operator') || '').trim(),
     objective: String(fd.get('objective') || '').trim(),
     observations: String(fd.get('observations') || '').trim(),
-    metrics
+    metrics,
+    errors
   };
 }
 
 $('#previewBtn').addEventListener('click', async () => {
   const payload = collectForm();
   if (!payload.type) return toast('请先选择实验类型');
+  if (payload.errors && payload.errors.length) return toast(payload.errors[0]);
   const cs = coreMetricStats(payload);
   if (cs.total && cs.filled === 0) return toast('请至少填写一项关键指标：' + cs.missing.slice(0, 3).join('、'));
   try {
-    const { analysis } = await api('/api/analyze', { method: 'POST', body: payload });
+    const { errors, ...body } = payload;
+    const { analysis } = await api('/api/analyze', { method: 'POST', body });
     renderAnalysis(analysis, false);
     $('#analysisResult').scrollIntoView({ behavior: 'smooth', block: 'start' });
   } catch (e) { toast(e.message); }
@@ -447,10 +456,12 @@ $('#analysisForm').addEventListener('submit', async e => {
   const payload = collectForm();
   if (!payload.type) return toast('请先选择实验类型');
   if (!payload.title) return toast('请填写实验标题');
+  if (payload.errors && payload.errors.length) return toast(payload.errors[0]);
   const cs = coreMetricStats(payload);
   if (cs.total && cs.filled === 0) return toast('请至少填写一项关键指标：' + cs.missing.slice(0, 3).join('、'));
   try {
-    const { analysis } = await api('/api/experiments', { method: 'POST', body: payload });
+    const { errors, ...body } = payload;
+    const { analysis } = await api('/api/experiments', { method: 'POST', body });
     renderAnalysis(analysis, true);
     toast('已保存到服务端并生成分析');
     $('#analysisResult').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -553,10 +564,26 @@ async function loadRecords() {
     return `<div class="record-item" data-id="${r.id}">
       <div class="record-top"><div><div class="record-title">${esc(r.title)}</div>
       <div class="record-meta">${esc(a.typeName || r.type)} · 批号 ${esc(r.batch || '—')} · ${esc(r.date)} · 操作人 ${esc(r.operator || '—')} · 疑似问题 ${a.findings ? a.findings.length : 0} 项</div></div>
-      <span class="badge ${riskClass(risk.key)}">${esc(risk.label)}预警 · ${a.healthScore != null ? a.healthScore : '—'}分</span></div>
+      <div class="record-side">
+        <span class="badge ${riskClass(risk.key)}">${esc(risk.label)}预警 · ${a.healthScore != null ? a.healthScore : '—'}分</span>
+        <button class="record-del" type="button" data-del="${esc(r.id)}" title="删除这条记录" aria-label="删除记录 ${esc(r.title)}">×</button>
+      </div></div>
     </div>`;
   }).join('');
-  $$('.record-item').forEach(el => el.addEventListener('click', () => openRecord(el.dataset.id)));
+  $$('.record-item').forEach(el => el.addEventListener('click', e => {
+    if (e.target.closest('.record-del')) return;
+    openRecord(el.dataset.id);
+  }));
+  $$('.record-del').forEach(btn => btn.addEventListener('click', async e => {
+    e.stopPropagation();
+    if (!confirm('确定删除这条实验记录？删除后不可恢复。')) return;
+    try {
+      await api('/api/experiments/' + encodeURIComponent(btn.dataset.del), { method: 'DELETE' });
+      toast('记录已删除');
+      loadRecords();
+      loadDashboard().catch(() => {});
+    } catch (err) { toast('删除失败：' + err.message); }
+  }));
 }
 
 async function openRecord(id) {

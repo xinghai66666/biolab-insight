@@ -178,6 +178,13 @@ body{
 .record-item{border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:10px;cursor:pointer;transition:.15s}
 .record-item:hover{border-color:var(--primary);box-shadow:var(--shadow)}
 .record-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.record-side{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.record-del{
+  width:28px;height:28px;border-radius:8px;border:1px solid var(--line);background:var(--surface);
+  color:var(--muted);font-size:calc(16px * var(--fs));line-height:1;cursor:pointer;flex-shrink:0;
+  display:inline-flex;align-items:center;justify-content:center;transition:.15s;font-family:inherit;
+}
+.record-del:hover{border-color:var(--red);color:var(--red);background:var(--red-soft)}
 .record-title{font-weight:600;font-size:calc(14px * var(--fs))}
 .record-meta{font-size:calc(11px * var(--fs));color:var(--muted);margin-top:3px}
 .badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:calc(11px * var(--fs));font-weight:600;white-space:nowrap}
@@ -329,7 +336,11 @@ body{
 .kb-pitfalls.hidden{display:none}
 .kb-refs{margin-top:4px}
 .kb-refs li{font-size:calc(12px * var(--fs));color:var(--muted);margin:4px 0}
-@media(max-width:900px){.kb-overview{grid-template-columns:1fr}.kb-toolbar-actions{width:100%}}
+@media(max-width:900px){
+  .kb-overview{grid-template-columns:1fr}
+  .kb-toolbar-actions{width:100%}
+  .kb-select-wrap{min-width:0}   /* 小屏不再强制 320px，避免横向溢出 */
+}
 
 /* 通用自定义下拉 */
 .picker{position:relative;display:inline-block;min-width:0}
@@ -691,3 +702,25 @@ body{transition:background-color .18s ease,color .18s ease}
 .set-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px}
 .set-note{font-size:calc(11.5px * var(--fs));color:var(--faint);line-height:1.7;margin:10px 0 0}
 @media(max-width:900px){.settings-grid{grid-template-columns:1fr}}
+
+/* ===== 打印：只输出报告正文，去掉导航/表单/按钮，统一白底深字 ===== */
+@media print{
+  @page{margin:14mm 12mm}
+  html,body{background:#fff !important;color:#111 !important}
+  .sidebar,.sidebar-mask,.topbar,.data-notice,.toast,.reagent-card,.op-modal{display:none !important}
+  .app{display:block !important}
+  .main{padding:0 !important;min-width:0 !important}
+  .view{display:none !important}
+  .view.active{display:block !important}
+  /* 分析页只打印结果，不打印录入表单与操作按钮 */
+  #view-new #analysisForm,.form-actions,.btn,.link-btn,.kb-toolbar,.filter-row,
+  .metric-optional-toggle,.metric-section-title{display:none !important}
+  #view-new #analysisResult{display:block !important}
+  .panel{box-shadow:none !important;border:1px solid #d6dbe3 !important;break-inside:avoid;page-break-inside:avoid;margin-bottom:10px !important;background:#fff !important}
+  .report-head,.recent-item,.record-item,.kb-ov-item,.kb-pitfall{break-inside:avoid;page-break-inside:avoid}
+  /* 夜间模式下也强制白底深字，避免打印成黑底 */
+  html[data-theme="dark"]{--bg:#fff;--surface:#fff;--text:#111;--muted:#555;--faint:#777;--line:#d6dbe3;--line-strong:#c2c9d3;--primary:#1a56c4;--primary-soft:#eef3fc;--surface-alt:#f6f8fb}
+  a{color:#111 !important;text-decoration:none}
+  .record-del{display:none !important}
+  .report-score .score-value,.badge{print-color-adjust:exact;-webkit-print-color-adjust:exact}
+}

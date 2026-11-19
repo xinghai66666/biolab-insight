@@ -162,6 +162,13 @@ const localApi = `async function api(path, opts = {}) {
     if (!rec) fail(404, '记录不存在');
     return { record: clone(rec) };
   }
+  if (pathname.startsWith('/api/experiments/') && method === 'DELETE') {
+    const id = pathname.split('/').pop();
+    const i = db.records.findIndex(r => r.id === id);
+    if (i < 0) fail(404, '记录不存在');
+    db.records.splice(i, 1);
+    return { ok: true };
+  }
   if (pathname === '/api/analyze' && method === 'POST') {
     if (!body.type || !SINGLE_DATA.KB.EXPERIMENT_TYPES[body.type]) fail(400, '无效的实验类型');
     return { analysis: analyzeRecord(body, history(body.type, body.excludeId || null)) };
